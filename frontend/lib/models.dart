@@ -26,3 +26,32 @@ class FlashcardSet {
     );
   }
 }
+
+class Flashcard {
+  final int flashcardId;
+  final int setId;
+  final String name;
+  final String front;
+  final String back;
+  final String dataType;
+
+  Flashcard({
+    required this.flashcardId,
+    required this.setId,
+    required this.name,
+    required this.front,
+    required this.back,
+    required this.dataType,
+  });
+
+  factory Flashcard.fromJson(Map<String, dynamic> json) {
+    return Flashcard(
+      flashcardId: json['flashcard_id'],
+      setId: json['set_id'],
+      name: json['name'],
+      front: json['front_side'],
+      back: json['back_side'],
+      dataType: json['data_type'],
+    );
+  }
+}

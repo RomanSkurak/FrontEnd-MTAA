@@ -25,7 +25,7 @@ class _ListOfSetsScreenState extends State<ListOfSetsScreen> {
         sets = loadedSets;
       });
     } catch (e) {
-      print('Chyba pri načítaní setov: $e');
+      print('Error loading sets: $e');
     }
   }
 
@@ -42,7 +42,9 @@ class _ListOfSetsScreenState extends State<ListOfSetsScreen> {
           padding: const EdgeInsets.only(left: 20),
           child: InkWell(
             borderRadius: BorderRadius.circular(32),
-            onTap: () {},
+            onTap: () {
+              Navigator.pop(context);
+            },
             child: const Icon(Icons.arrow_back, color: Colors.black, size: 32),
           ),
         ),
@@ -56,48 +58,63 @@ class _ListOfSetsScreenState extends State<ListOfSetsScreen> {
         ),
       ),
 
-      body: ListView.builder(
-        itemCount: sets.length,
-        itemBuilder: (context, index) {
-          final set = sets[index];
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+      body: sets.isEmpty
+          ? const Center(
+              child: Text(
+                "You don't have any flashcard sets yet",
+                style: TextStyle(fontSize: 16, color: Colors.black54),
               ),
-              color: Colors.grey[200],
-              elevation: 1.5,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: SizedBox(
-                  height: 64,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        set.name,
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
+            )
+          : ListView.builder(
+              itemCount: sets.length,
+              itemBuilder: (context, index) {
+                final set = sets[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    color: Colors.grey[200],
+                    elevation: 1.5,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: SizedBox(
+                        height: 64,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              set.name,
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.edit, size: 25),
+                              color: Colors.black,
+                              onPressed: () async {
+                                final result = await Navigator.pushNamed(
+                                  context,
+                                  '/editset',
+                                  arguments: set,
+                                );
+
+                                if (result == true) {
+                                  _loadSets();
+                                }
+                              },
+                            ),
+                          ],
                         ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.edit, size: 25),
-                        color: Colors.black,
-                        onPressed: () {
-                          // TODO: Edit
-                        },
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
-          );
-        },
-      ),
 
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.only(
