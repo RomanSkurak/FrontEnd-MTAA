@@ -118,7 +118,9 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
                         child: const Text('Cancel'),
                       ),
                       ElevatedButton(
-                        onPressed: () => Navigator.pop(context, controller.text.trim()),
+                        onPressed:
+                            () =>
+                                Navigator.pop(context, controller.text.trim()),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.black,
                           foregroundColor: Colors.white,
@@ -211,22 +213,35 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
                   animation: _animation,
                   builder: (context, child) {
                     final isBack = _animation.value >= pi / 2;
-                    final content = isBack
-                        ? (backImage != null
-                            ? Image.memory(backImage!, fit: BoxFit.contain)
-                            : Text(backText, textAlign: TextAlign.center, style: const TextStyle(fontSize: 18)))
-                        : (frontImage != null
-                            ? Image.memory(frontImage!, fit: BoxFit.contain)
-                            : Text(frontText, textAlign: TextAlign.center, style: const TextStyle(fontSize: 18)));
+                    final content =
+                        isBack
+                            ? (backImage != null
+                                ? Image.memory(backImage!, fit: BoxFit.contain)
+                                : Text(
+                                  backText,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(fontSize: 18),
+                                ))
+                            : (frontImage != null
+                                ? Image.memory(frontImage!, fit: BoxFit.contain)
+                                : Text(
+                                  frontText,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(fontSize: 18),
+                                ));
 
                     return Transform(
                       alignment: Alignment.center,
-                      transform: Matrix4.identity()
-                        ..setEntry(3, 2, 0.001)
-                        ..rotateY(_animation.value),
+                      transform:
+                          Matrix4.identity()
+                            ..setEntry(3, 2, 0.001)
+                            ..rotateY(_animation.value),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: isBack ? const Color(0xFFC1C1C1) : const Color(0xFFE1E1E1),
+                          color:
+                              isBack
+                                  ? const Color(0xFFC1C1C1)
+                                  : const Color(0xFFE1E1E1),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Stack(
@@ -234,9 +249,17 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
                           children: [
                             Transform(
                               alignment: Alignment.center,
-                              transform: isBack ? Matrix4.rotationY(pi) : Matrix4.identity(),
+                              transform:
+                                  isBack
+                                      ? Matrix4.rotationY(pi)
+                                      : Matrix4.identity(),
                               child: Padding(
-                                padding: const EdgeInsets.fromLTRB(24, 24, 24, 48),
+                                padding: const EdgeInsets.fromLTRB(
+                                  24,
+                                  24,
+                                  24,
+                                  48,
+                                ),
                                 child: content,
                               ),
                             ),
@@ -244,7 +267,11 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
                               bottom: 12,
                               child: GestureDetector(
                                 onTap: _flipCard,
-                                child: const Icon(Icons.sync, size: 28, color: Colors.black54),
+                                child: const Icon(
+                                  Icons.sync,
+                                  size: 28,
+                                  color: Colors.black54,
+                                ),
                               ),
                             ),
                           ],
@@ -290,40 +317,44 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
               width: double.infinity,
               height: 54,
               child: ElevatedButton(
-                onPressed: _isCardFilled()
-                    ? () async {
-                        final int? cardId = await ApiService().saveCardToSet(
-                          setId: widget.setId,
-                          frontText: frontText,
-                          backText: backText,
-                          frontImage: frontImage,
-                          backImage: backImage,
-                        );
-
-                        if (cardId != null) {
-                          Navigator.pop(context, {
-                            'id': cardId,
-                            'front': frontText,
-                            'back': backText,
-                          });
-                          debugPrint('🔁 Returning new card ID: $cardId');
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Failed to save card')),
+                onPressed:
+                    _isCardFilled()
+                        ? () async {
+                          final int? cardId = await ApiService().saveCardToSet(
+                            setId: widget.setId,
+                            frontText: frontText,
+                            backText: backText,
+                            frontImage: frontImage,
+                            backImage: backImage,
                           );
+
+                          if (cardId != null) {
+                            Navigator.pop(context, {
+                              'id': cardId,
+                              'front': frontText,
+                              'back': backText,
+                            });
+                            debugPrint('🔁 Returning new card ID: $cardId');
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Failed to save card'),
+                              ),
+                            );
+                          }
                         }
-                      }
-                    : null,
+                        : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: const Text(
                   'Add card to set',
                   style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
               ),
-
             ),
             const SizedBox(height: 8),
             if (!_isCardFilled())

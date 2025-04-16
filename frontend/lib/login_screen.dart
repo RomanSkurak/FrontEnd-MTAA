@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -28,7 +29,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (success) {
       // TODO: Presmerovanie do domovskej obrazovky
-      Navigator.pushReplacementNamed(context, '/home');
+      final prefs = await SharedPreferences.getInstance();
+      final role = prefs.getString('role');
+
+      if (role == 'admin') {
+        Navigator.pushReplacementNamed(context, '/admin');
+      } else {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
 
       ScaffoldMessenger.of(
         context,
@@ -78,6 +86,21 @@ class _LoginScreenState extends State<LoginScreen> {
                   Navigator.pushNamed(context, '/register');
                 },
                 child: const Text('Nemáš účet? Registrovať sa'),
+              ),
+              OutlinedButton(
+                onPressed: () async {
+                  final response = await ApiService().guestLogin();
+                  if (response) {
+                    Navigator.pushReplacementNamed(context, '/guest');
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Nepodarilo sa prihlásiť ako hosť'),
+                      ),
+                    );
+                  }
+                },
+                child: const Text('Pokračovať ako hosť'),
               ),
             ],
           ),

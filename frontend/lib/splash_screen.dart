@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'api_service.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -20,7 +21,10 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> checkAuth() async {
     final token = await ApiService().getToken();
-    if (token == null) {
+    final prefs = await SharedPreferences.getInstance();
+    final role = prefs.getString('role');
+
+    if (token == null || role == null) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -30,10 +34,16 @@ class _SplashScreenState extends State<SplashScreen> {
 
     final isValid = await ApiService().verifyToken(token);
     if (isValid) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+      if (role == 'admin') {
+        Navigator.pushReplacementNamed(context, '/admin');
+      } else if (role == 'host') {
+        Navigator.pushReplacementNamed(context, '/guest');
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      }
     } else {
       Navigator.pushReplacement(
         context,

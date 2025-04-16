@@ -34,9 +34,11 @@ class ApiService {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       final token = data['token'];
+      final userRole = data['userRole'];
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', token);
+      await prefs.setString('role', userRole);
 
       return true;
     } else {
@@ -96,27 +98,25 @@ class ApiService {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
+    await prefs.remove('role');
   }
 
   //ZISKANIE SETOV
   Future<List<FlashcardSet>> fetchSets() async {
-  final token = await getToken();
+    final token = await getToken();
 
-  final response = await http.get(
-    Uri.parse('$baseUrl/flashcard-sets'),
-    headers: {'Authorization': 'Bearer $token'},
-  );
+    final response = await http.get(
+      Uri.parse('$baseUrl/flashcard-sets'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
 
-  if (response.statusCode == 200) {
-    final List<dynamic> data = jsonDecode(response.body);
-    return data
-        .map((json) => FlashcardSet.fromJson(json))
-        .toList()
-      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt)); 
-  } else {
-    throw Exception('Failed to load flashcard sets');
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => FlashcardSet.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load flashcard sets');
+    }
   }
-}
 
   //VYTVORENIE SETU
   Future<int?> createSet({required String name, required bool isPublic}) async {
@@ -132,10 +132,56 @@ class ApiService {
 
     if (response.statusCode == 201) {
       final data = jsonDecode(response.body);
-      return data['set']['set_id']; 
+      return data['set']['set_id'];
     } else {
       return null;
     }
+  }
+
+  // GET public sets
+  Future<List<dynamic>> getPublicSets() async {
+    final token = await getToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/public-sets'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      return [];
+    }
+  }
+
+  // POST public set
+  Future<bool> createPublicSet(String name) async {
+    final token = await getToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/public-sets'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'name': name}),
+    );
+    return response.statusCode == 201;
+  }
+
+  //GUEST login
+  Future<bool> guestLogin() async {
+    final response = await http.post(Uri.parse('$baseUrl/guest-login'));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final token = data['token'];
+      final role = data['userRole'];
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', token);
+      await prefs.setString('role', role);
+      return true;
+    }
+    return false;
   }
 
   //VYTVORENIE KARTY
@@ -159,7 +205,7 @@ class ApiService {
         'name': name,
         'front_side': front,
         'back_side': back,
-        'data_type': dataType, 
+        'data_type': dataType,
       }),
     );
 
@@ -176,11 +222,7 @@ class ApiService {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({
-        'name': newName,
-        'is_public_FYN': false, 
-        
-      }),
+      body: jsonEncode({'name': newName, 'is_public_FYN': false}),
     );
   }
 
@@ -190,9 +232,7 @@ class ApiService {
 
     final response = await http.delete(
       Uri.parse('$baseUrl/flashcard-sets/$setId'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
+      headers: {'Authorization': 'Bearer $token'},
     );
 
     return response.statusCode == 200;
@@ -209,35 +249,43 @@ class ApiService {
     final token = await getToken();
     final uri = Uri.parse('$baseUrl/flashcards');
 
-    String baseName = frontText.trim().isNotEmpty
-        ? (frontText.length > 15 ? '${frontText.substring(0, 15)}...' : frontText)
-        : '[image]';
+    String baseName =
+        frontText.trim().isNotEmpty
+            ? (frontText.length > 15
+                ? '${frontText.substring(0, 15)}...'
+                : frontText)
+            : '[image]';
 
-    final request = http.MultipartRequest('POST', uri)
-      ..headers['Authorization'] = 'Bearer $token'
-      ..fields['set_id'] = setId.toString()
-      ..fields['name'] = baseName
-      ..fields['data_type'] =
-          (frontImage != null || backImage != null) ? 'picture' : 'text'
-      ..fields['front_side'] = frontText
-      ..fields['back_side'] = backText;
+    final request =
+        http.MultipartRequest('POST', uri)
+          ..headers['Authorization'] = 'Bearer $token'
+          ..fields['set_id'] = setId.toString()
+          ..fields['name'] = baseName
+          ..fields['data_type'] =
+              (frontImage != null || backImage != null) ? 'picture' : 'text'
+          ..fields['front_side'] = frontText
+          ..fields['back_side'] = backText;
 
     if (frontImage != null) {
-      request.files.add(http.MultipartFile.fromBytes(
-        'image_front',
-        frontImage,
-        filename: 'front.png',
-        contentType: MediaType('image', 'png'),
-      ));
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'image_front',
+          frontImage,
+          filename: 'front.png',
+          contentType: MediaType('image', 'png'),
+        ),
+      );
     }
 
     if (backImage != null) {
-      request.files.add(http.MultipartFile.fromBytes(
-        'image_back',
-        backImage,
-        filename: 'back.png',
-        contentType: MediaType('image', 'png'),
-      ));
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'image_back',
+          backImage,
+          filename: 'back.png',
+          contentType: MediaType('image', 'png'),
+        ),
+      );
     }
 
     final streamedResponse = await request.send();
@@ -250,7 +298,9 @@ class ApiService {
 
         return cardId;
       } catch (e) {
-        print('Error parsing the response, but the card was saved. Returning null');
+        print(
+          'Error parsing the response, but the card was saved. Returning null',
+        );
         return null;
       }
     } else {
@@ -258,7 +308,6 @@ class ApiService {
       return null;
     }
   }
-
 
   // LOAD konkretneho setu aj s flashcards
   Future<Map<String, dynamic>> loadSetWithFlashcards(int setId) async {
@@ -278,21 +327,18 @@ class ApiService {
       final setData = jsonDecode(setResponse.body);
       final cardsData = jsonDecode(cardsResponse.body);
 
-      return {
-        'set': setData,
-        'cards': cardsData,
-      };
+      return {'set': setData, 'cards': cardsData};
     } else {
       throw Exception('Failed to load set or flashcards');
     }
   }
 
-   //Flashcard by ID
+  //Flashcard by ID
   Future<Map<String, dynamic>> getFlashcardById(int flashcardId) async {
     final token = await getToken();
 
     final response = await http.get(
-      Uri.parse('$baseUrl/flashcard/$flashcardId'), 
+      Uri.parse('$baseUrl/flashcard/$flashcardId'),
       headers: {'Authorization': 'Bearer $token'},
     );
 
@@ -315,34 +361,39 @@ class ApiService {
     final token = await getToken();
     final uri = Uri.parse('$baseUrl/flashcards/$flashcardId');
 
-    final request = http.MultipartRequest('PUT', uri)
-      ..headers['Authorization'] = 'Bearer $token'
-      ..fields['name'] = name
-      ..fields['front_side'] = frontText
-      ..fields['back_side'] = backText
-      ..fields['data_type'] =
-          (frontImage != null || backImage != null) ? 'picture' : 'text';
+    final request =
+        http.MultipartRequest('PUT', uri)
+          ..headers['Authorization'] = 'Bearer $token'
+          ..fields['name'] = name
+          ..fields['front_side'] = frontText
+          ..fields['back_side'] = backText
+          ..fields['data_type'] =
+              (frontImage != null || backImage != null) ? 'picture' : 'text';
 
     if (frontImage != null) {
-      request.files.add(http.MultipartFile.fromBytes(
-        'image_front',
-        frontImage,
-        filename: 'front.png',
-        contentType: MediaType('image', 'png'),
-      ));
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'image_front',
+          frontImage,
+          filename: 'front.png',
+          contentType: MediaType('image', 'png'),
+        ),
+      );
     } else {
-      request.fields['remove_image_front'] = 'true'; 
+      request.fields['remove_image_front'] = 'true';
     }
 
     if (backImage != null) {
-      request.files.add(http.MultipartFile.fromBytes(
-        'image_back',
-        backImage,
-        filename: 'back.png',
-        contentType: MediaType('image', 'png'),
-      ));
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'image_back',
+          backImage,
+          filename: 'back.png',
+          contentType: MediaType('image', 'png'),
+        ),
+      );
     } else {
-      request.fields['remove_image_back'] = 'true'; 
+      request.fields['remove_image_back'] = 'true';
     }
 
     final streamedResponse = await request.send();
@@ -361,9 +412,7 @@ class ApiService {
 
     final response = await http.delete(
       Uri.parse('$baseUrl/flashcards/$flashcardId'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
+      headers: {'Authorization': 'Bearer $token'},
     );
 
     return response.statusCode == 200;
@@ -375,9 +424,7 @@ class ApiService {
 
     final response = await http.get(
       Uri.parse('$baseUrl/me'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
+      headers: {'Authorization': 'Bearer $token'},
     );
 
     if (response.statusCode == 200) {
@@ -388,4 +435,3 @@ class ApiService {
     }
   }
 }
-

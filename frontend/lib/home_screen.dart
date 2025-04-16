@@ -77,11 +77,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(width: 12),
                 Text(
                   username,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const Spacer(),
                 IconButton(
                   onPressed: () {
+                    Navigator.pushNamed(context, '/settings');
                   },
                   icon: const Icon(Icons.settings, size: 28),
                 ),
@@ -111,7 +115,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.grey[200],
                     foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -136,10 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 44,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   alignment: Alignment.centerLeft,
-                  child: Text(
-                    title,
-                    style: const TextStyle(fontSize: 16),
-                  ),
+                  child: Text(title, style: const TextStyle(fontSize: 16)),
                 );
               }),
 
@@ -157,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   GestureDetector(
                     onTap: () async {
                       await Navigator.pushNamed(context, '/sets');
-                      _loadRecentSets(); 
+                      _loadRecentSets();
                     },
                     child: Container(
                       width: 100,

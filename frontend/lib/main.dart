@@ -8,7 +8,10 @@ import 'create_set_screen.dart';
 import 'new_card_screen.dart';
 import 'edit_set_screen.dart';
 import 'edit_card_screen.dart';
+import 'admin_screen.dart';
+import 'guest_screen.dart';
 import 'models.dart';
+import 'setting_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -28,10 +31,14 @@ class MyApp extends StatelessWidget {
         '/register': (context) => const RegisterScreen(),
         '/home': (context) => const HomeScreen(),
         '/sets': (context) => const ListOfSetsScreen(),
+        '/admin': (context) => const AdminScreen(),
+        '/guest': (context) => const GuestScreen(),
+        '/settings': (context) => const SettingScreen(),
         '/create': (context) => const CreateSetScreen(),
         '/newcard': (context) => NewCardScreen(),
         '/editset': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as FlashcardSet;
+          final args =
+              ModalRoute.of(context)!.settings.arguments as FlashcardSet;
           return EditSetScreen(flashcardSet: args);
         },
         '/editcard': (context) {
