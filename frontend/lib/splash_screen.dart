@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 //import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart';
 import 'home_screen.dart';
@@ -19,6 +20,7 @@ class _SplashScreenState extends State<SplashScreen> {
     checkAuth();
   }
 
+  //AUTORIZACIA
   Future<void> checkAuth() async {
     final token = await ApiService().getToken();
     final prefs = await SharedPreferences.getInstance();
@@ -34,6 +36,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
     final isValid = await ApiService().verifyToken(token);
     if (isValid) {
+      debugPrint('Halo vidis ma ?');
+      await getAndSendFcmToken();
+
       if (role == 'admin') {
         Navigator.pushReplacementNamed(context, '/admin');
       } else if (role == 'host') {
@@ -49,6 +54,24 @@ class _SplashScreenState extends State<SplashScreen> {
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
+    }
+  }
+
+  //FCM TOKEN
+  Future<void> getAndSendFcmToken() async {
+    try {
+      debugPrint('ZÍSKAVAM FCM token...');
+      String? fcmToken = await FirebaseMessaging.instance.getToken();
+      debugPrint('FCM token je: $fcmToken');
+
+      if (fcmToken != null) {
+        final jwtToken = await ApiService().getToken();
+        if (jwtToken != null) {
+          await ApiService().sendTokenToBackend(fcmToken, jwtToken);
+        }
+      }
+    } catch (e) {
+      print('Chyba pri získavaní alebo odosielaní FCM tokenu: $e');
     }
   }
 

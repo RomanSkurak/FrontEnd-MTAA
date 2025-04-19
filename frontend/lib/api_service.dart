@@ -434,4 +434,23 @@ class ApiService {
       return null;
     }
   }
+
+  //Odoslanie FCM tokenu
+  Future<void> sendTokenToBackend(String fcmToken, String jwtToken) async {
+    final token = await getToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/notification-token'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: '{"fcm_token": "$fcmToken"}',
+    );
+
+    if (response.statusCode == 200) {
+      print('FCM token úspešne uložený!');
+    } else {
+      print('Chyba pri odosielaní tokenu: ${response.body}');
+    }
+  }
 }

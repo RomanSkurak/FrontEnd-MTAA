@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'api_service.dart';
 import 'statistics_screen.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'main.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,12 +13,46 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  late IO.Socket socket;
+
+  void connectSocket() {
+    socket = IO.io(
+      'http://10.0.2.2:3000', // pre emulátor; fyzické zariadenie: zadaj tvoju IP
+      <String, dynamic>{
+        'transports': ['websocket'],
+        'autoConnect': true,
+      },
+    );
+
+    socket.onConnect((_) {
+      print('✅ Pripojený na WebSocket');
+    });
+
+    socket.on('newPublicSet', (data) {
+      print('📬 Prišla realtime sada: ${data['title']}');
+
+      // Zobrazenie SnackBar-u
+      final context = navigatorKey.currentContext;
+      if (context != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('📚 Nový verejný set: ${data['title']}'),
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+    });
+
+    socket.onDisconnect((_) => print('❌ WebSocket odpojený'));
+  }
+
   List<String> recentlyAdded = [];
   String username = 'Loading...';
 
   @override
   void initState() {
     super.initState();
+    connectSocket();
     _loadUsername();
     _loadRecentSets();
   }

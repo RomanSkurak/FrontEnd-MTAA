@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'login_screen.dart';
 import 'register_screen.dart';
 import 'home_screen.dart';
@@ -13,7 +15,23 @@ import 'guest_screen.dart';
 import 'models.dart';
 import 'setting_screen.dart';
 
-void main() {
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  await FirebaseMessaging.instance.requestPermission();
+
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    print('📥 Push prišiel (foreground): ${message.notification?.title}');
+  });
+
+  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+    print(
+      '📬 Užívateľ klikol na notifikáciu (background): ${message.notification?.title}',
+    );
+  });
+
   runApp(const MyApp());
 }
 
@@ -23,6 +41,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'StudyBro',
       home: const SplashScreen(),
