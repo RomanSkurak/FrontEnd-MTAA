@@ -4,6 +4,7 @@ import 'api_service.dart';
 import 'statistics_screen.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'main.dart';
+import 'models.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,7 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void connectSocket() {
     socket = IO.io(
-      'http://10.0.2.2:3000', // pre emulátor; fyzické zariadenie: zadaj tvoju IP
+      'http://10.0.2.2:3000', 
       <String, dynamic>{
         'transports': ['websocket'],
         'autoConnect': true,
@@ -31,7 +32,6 @@ class _HomeScreenState extends State<HomeScreen> {
     socket.on('newPublicSet', (data) {
       print('📬 Prišla realtime sada: ${data['title']}');
 
-      // Zobrazenie SnackBar-u
       final context = navigatorKey.currentContext;
       if (context != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -46,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
     socket.onDisconnect((_) => print('❌ WebSocket odpojený'));
   }
 
-  List<String> recentlyAdded = [];
+  List<FlashcardSet> recentlyAdded = [];
   String username = 'Loading...';
 
   @override
@@ -71,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final sets = await ApiService().fetchSets();
       if (mounted) {
         setState(() {
-          recentlyAdded = sets.take(4).map((set) => set.name).toList();
+          recentlyAdded = sets.take(4).toList();
         });
       }
     } catch (e) {
@@ -169,17 +169,26 @@ class _HomeScreenState extends State<HomeScreen> {
             if (recentlyAdded.isEmpty)
               const Text('No sets yet.')
             else
-              ...recentlyAdded.map((title) {
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(6),
+              ...recentlyAdded.map((set) {
+                  return InkWell(
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      '/learn',
+                      arguments: set.setId,
+                    );
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    height: 44,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    alignment: Alignment.centerLeft,
+                    child: Text(set.name, style: const TextStyle(fontSize: 16)),
                   ),
-                  height: 44,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  alignment: Alignment.centerLeft,
-                  child: Text(title, style: const TextStyle(fontSize: 16)),
                 );
               }),
 

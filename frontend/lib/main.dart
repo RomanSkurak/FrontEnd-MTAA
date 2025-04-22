@@ -18,22 +18,20 @@ import 'admin_screen.dart';
 import 'guest_screen.dart';
 import 'models.dart';
 import 'setting_screen.dart';
+import 'learning_screen.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-/// Background callback
 void callbackDispatcher() {
   Workmanager().executeTask((taskName, inputData) async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Zapíš analytiku
     final count = prefs.getInt('task_count') ?? 0;
     prefs.setInt('task_count', count + 1);
     prefs.setString('last_task_time', DateTime.now().toIso8601String());
 
-    // Zobraz notifikáciu
     const androidDetails = AndroidNotificationDetails(
       'studybro_channel',
       'StudyBro Reminder',
@@ -56,7 +54,6 @@ void callbackDispatcher() {
   });
 }
 
-//MAIN
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -72,21 +69,19 @@ void main() async {
     );
   });
 
-  // Notifikácie
   await flutterLocalNotificationsPlugin.initialize(
     const InitializationSettings(
       android: AndroidInitializationSettings('@mipmap/ic_launcher'),
     ),
   );
 
-  // Workmanager init
   await Workmanager().initialize(callbackDispatcher, isInDebugMode: true);
 
   await Workmanager().registerPeriodicTask(
     "studyReminderTask",
     "reminderTask",
     frequency: Duration(hours: 6),
-    initialDelay: Duration(minutes: 1), // na testovanie
+    initialDelay: Duration(minutes: 1), 
   );
 
   runApp(const MyApp());
@@ -120,6 +115,10 @@ class MyApp extends StatelessWidget {
         '/editcard': (context) {
           final flashcardId = ModalRoute.of(context)!.settings.arguments as int;
           return EditCardScreen(flashcardId: flashcardId);
+        },
+        '/learn': (context) {                         
+          final setId = ModalRoute.of(context)!.settings.arguments as int;
+          return LearningScreen(setId: setId);
         },
       },
     );
