@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:workmanager/workmanager.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'login_screen.dart';
 import 'register_screen.dart';
 import 'home_screen.dart';
@@ -16,7 +20,43 @@ import 'models.dart';
 import 'setting_screen.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
+/// Background callback
+void callbackDispatcher() {
+  Workmanager().executeTask((taskName, inputData) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Zapíš analytiku
+    final count = prefs.getInt('task_count') ?? 0;
+    prefs.setInt('task_count', count + 1);
+    prefs.setString('last_task_time', DateTime.now().toIso8601String());
+
+    // Zobraz notifikáciu
+    const androidDetails = AndroidNotificationDetails(
+      'studybro_channel',
+      'StudyBro Reminder',
+      channelDescription: 'Reminder to study flashcards',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+
+    const notificationDetails = NotificationDetails(android: androidDetails);
+
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      '📚 Nezabudni na učenie!',
+      'Poď si zopakovať svoje flashcards!',
+      notificationDetails,
+    );
+
+    print('✅ Background task executed.');
+    return Future.value(true);
+  });
+}
+
+//MAIN
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -31,6 +71,23 @@ void main() async {
       '📬 Užívateľ klikol na notifikáciu (background): ${message.notification?.title}',
     );
   });
+
+  // Notifikácie
+  await flutterLocalNotificationsPlugin.initialize(
+    const InitializationSettings(
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+    ),
+  );
+
+  // Workmanager init
+  await Workmanager().initialize(callbackDispatcher, isInDebugMode: true);
+
+  await Workmanager().registerPeriodicTask(
+    "studyReminderTask",
+    "reminderTask",
+    frequency: Duration(hours: 6),
+    initialDelay: Duration(minutes: 1), // na testovanie
+  );
 
   runApp(const MyApp());
 }
