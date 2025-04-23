@@ -329,10 +329,15 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
                           );
 
                           if (cardId != null) {
+                            String frontDisplay = frontText.trim().isNotEmpty
+                                ? frontText.trim()
+                                : (frontImage != null ? '[image]' : '');
+
                             Navigator.pop(context, {
                               'id': cardId,
-                              'front': frontText,
+                              'front': frontDisplay,
                               'back': backText,
+                              'image_front': frontImage, 
                             });
                             debugPrint('🔁 Returning new card ID: $cardId');
                           } else {

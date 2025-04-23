@@ -12,8 +12,8 @@ import 'splash_screen.dart';
 import 'list_sets_screen.dart';
 import 'create_set_screen.dart';
 import 'new_card_screen.dart';
-import 'edit_set_screen.dart';
-import 'edit_card_screen.dart';
+import 'edit_card_screen.dart' as editCard;
+import 'edit_set_screen.dart' as editSet;
 import 'admin_screen.dart';
 import 'guest_screen.dart';
 import 'models.dart';
@@ -108,13 +108,12 @@ class MyApp extends StatelessWidget {
         '/create': (context) => const CreateSetScreen(),
         '/newcard': (context) => NewCardScreen(),
         '/editset': (context) {
-          final args =
-              ModalRoute.of(context)!.settings.arguments as FlashcardSet;
-          return EditSetScreen(flashcardSet: args);
+          final args = ModalRoute.of(context)!.settings.arguments as FlashcardSet;
+          return editSet.EditSetScreen(flashcardSet: args); 
         },
         '/editcard': (context) {
           final flashcardId = ModalRoute.of(context)!.settings.arguments as int;
-          return EditCardScreen(flashcardId: flashcardId);
+          return editCard.EditCardScreen(flashcardId: flashcardId);
         },
         '/learn': (context) {                         
           final setId = ModalRoute.of(context)!.settings.arguments as int;

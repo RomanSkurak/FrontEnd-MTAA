@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'models.dart';
 import 'package:http_parser/http_parser.dart';
 import 'dart:typed_data';
+import 'package:mime/mime.dart';
 
 class ApiService {
   final String baseUrl =
@@ -184,33 +185,58 @@ class ApiService {
     return false;
   }
 
+
   //VYTVORENIE KARTY
   Future<bool> addFlashcard({
     required int setId,
     required String name,
     required String front,
     required String back,
-    required String dataType,
+    Uint8List? frontImage,
+    Uint8List? backImage,
   }) async {
     final token = await getToken();
+    final uri   = Uri.parse('$baseUrl/flashcards');
 
-    final response = await http.post(
-      Uri.parse('$baseUrl/flashcards'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'set_id': setId,
-        'name': name,
-        'front_side': front,
-        'back_side': back,
-        'data_type': dataType,
-      }),
-    );
+    final request = http.MultipartRequest('POST', uri)
+      ..headers['Authorization'] = 'Bearer $token'
+      ..fields['set_id']     = setId.toString()
+      ..fields['name']       = name
+      ..fields['front_side'] = front
+      ..fields['back_side']  = back
+      ..fields['data_type']  =
+          (frontImage != null || backImage != null) ? 'picture' : 'text';
 
-    return response.statusCode == 201;
+    if (frontImage != null) {
+      final mimeType = lookupMimeType('front.jpg', headerBytes: frontImage);
+      final mediaType = mimeType?.split('/');
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'image_front',
+          frontImage,
+          filename: 'front.${mediaType?[1] ?? 'jpg'}',
+          contentType: MediaType(mediaType?[0] ?? 'image', mediaType?[1] ?? 'jpg'),
+        ),
+      );
+    }
+
+    if (backImage != null) {
+      final mimeType = lookupMimeType('back.jpg', headerBytes: backImage);
+      final mediaType = mimeType?.split('/');
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'image_back',
+          backImage,
+          filename: 'back.${mediaType?[1] ?? 'jpg'}',
+          contentType: MediaType(mediaType?[0] ?? 'image', mediaType?[1] ?? 'jpg'),
+        ),
+      );
+    }
+
+    final streamed = await request.send();
+    return streamed.statusCode == 201;
   }
+
 
   //UPDATE NAZVU SETU
   Future<void> updateSetName(int setId, String newName) async {
@@ -256,34 +282,37 @@ class ApiService {
                 : frontText)
             : '[image]';
 
-    final request =
-        http.MultipartRequest('POST', uri)
-          ..headers['Authorization'] = 'Bearer $token'
-          ..fields['set_id'] = setId.toString()
-          ..fields['name'] = baseName
-          ..fields['data_type'] =
-              (frontImage != null || backImage != null) ? 'picture' : 'text'
-          ..fields['front_side'] = frontText
-          ..fields['back_side'] = backText;
+    final request = http.MultipartRequest('POST', uri)
+      ..headers['Authorization'] = 'Bearer $token'
+      ..fields['set_id'] = setId.toString()
+      ..fields['name'] = baseName
+      ..fields['data_type'] =
+          (frontImage != null || backImage != null) ? 'picture' : 'text'
+      ..fields['front_side'] = frontText
+      ..fields['back_side'] = backText;
 
     if (frontImage != null) {
+      final mimeType = lookupMimeType('front.jpg', headerBytes: frontImage);
+      final mediaType = mimeType?.split('/');
       request.files.add(
         http.MultipartFile.fromBytes(
           'image_front',
           frontImage,
-          filename: 'front.png',
-          contentType: MediaType('image', 'png'),
+          filename: 'front.${mediaType?[1] ?? 'jpg'}',
+          contentType: MediaType(mediaType?[0] ?? 'image', mediaType?[1] ?? 'jpg'),
         ),
       );
     }
 
     if (backImage != null) {
+      final mimeType = lookupMimeType('back.jpg', headerBytes: backImage);
+      final mediaType = mimeType?.split('/');
       request.files.add(
         http.MultipartFile.fromBytes(
           'image_back',
           backImage,
-          filename: 'back.png',
-          contentType: MediaType('image', 'png'),
+          filename: 'back.${mediaType?[1] ?? 'jpg'}',
+          contentType: MediaType(mediaType?[0] ?? 'image', mediaType?[1] ?? 'jpg'),
         ),
       );
     }
@@ -298,9 +327,7 @@ class ApiService {
 
         return cardId;
       } catch (e) {
-        print(
-          'Error parsing the response, but the card was saved. Returning null',
-        );
+        print('Error parsing response, but card was saved. Returning null');
         return null;
       }
     } else {
@@ -308,6 +335,7 @@ class ApiService {
       return null;
     }
   }
+
 
   // LOAD konkretneho setu aj s flashcards
   Future<Map<String, dynamic>> loadSetWithFlashcards(int setId) async {
@@ -361,22 +389,23 @@ class ApiService {
     final token = await getToken();
     final uri = Uri.parse('$baseUrl/flashcards/$flashcardId');
 
-    final request =
-        http.MultipartRequest('PUT', uri)
-          ..headers['Authorization'] = 'Bearer $token'
-          ..fields['name'] = name
-          ..fields['front_side'] = frontText
-          ..fields['back_side'] = backText
-          ..fields['data_type'] =
-              (frontImage != null || backImage != null) ? 'picture' : 'text';
+    final request = http.MultipartRequest('PUT', uri)
+      ..headers['Authorization'] = 'Bearer $token'
+      ..fields['name'] = name
+      ..fields['front_side'] = frontText
+      ..fields['back_side'] = backText
+      ..fields['data_type'] =
+          (frontImage != null || backImage != null) ? 'picture' : 'text';
 
     if (frontImage != null) {
+      final mimeType = lookupMimeType('front.jpg', headerBytes: frontImage);
+      final mediaType = mimeType?.split('/');
       request.files.add(
         http.MultipartFile.fromBytes(
           'image_front',
           frontImage,
-          filename: 'front.png',
-          contentType: MediaType('image', 'png'),
+          filename: 'front.${mediaType?[1] ?? 'jpg'}',
+          contentType: MediaType(mediaType?[0] ?? 'image', mediaType?[1] ?? 'jpg'),
         ),
       );
     } else {
@@ -384,12 +413,14 @@ class ApiService {
     }
 
     if (backImage != null) {
+      final mimeType = lookupMimeType('back.jpg', headerBytes: backImage);
+      final mediaType = mimeType?.split('/');
       request.files.add(
         http.MultipartFile.fromBytes(
           'image_back',
           backImage,
-          filename: 'back.png',
-          contentType: MediaType('image', 'png'),
+          filename: 'back.${mediaType?[1] ?? 'jpg'}',
+          contentType: MediaType(mediaType?[0] ?? 'image', mediaType?[1] ?? 'jpg'),
         ),
       );
     } else {

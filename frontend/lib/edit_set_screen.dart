@@ -43,6 +43,7 @@ class _EditSetScreenState extends State<EditSetScreen> {
               'flashcardId': f['flashcard_id'],
               'front': f['front_side'] ?? '',
               'back': f['back_side'] ?? '',
+              'image_front': f['image_front'],
             }).toList();
         _loading = false;
       });
@@ -179,6 +180,10 @@ class _EditSetScreenState extends State<EditSetScreen> {
               const SizedBox(height: 20),
               ...cards.asMap().entries.map((entry) {
                 final card = entry.value;
+                final frontText = card['front']?.trim() ?? '';
+                final imageFront = card['image_front'];
+                final displayName = frontText.isNotEmpty ? frontText : (imageFront != null ? '[image]' : '');
+
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Container(
@@ -193,7 +198,7 @@ class _EditSetScreenState extends State<EditSetScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            card['front'] ?? '',
+                            displayName,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontSize: 16),
                           ),
@@ -218,6 +223,7 @@ class _EditSetScreenState extends State<EditSetScreen> {
                                     'flashcardId': updated['flashcard_id'],
                                     'front': updated['front_side'] ?? '',
                                     'back': updated['back_side'] ?? '',
+                                    'image_front': updated['image_front'],
                                   };
                                 });
                               } catch (e) {
@@ -243,9 +249,15 @@ class _EditSetScreenState extends State<EditSetScreen> {
                     final front = result['front'] ?? '';
                     final back = result['back'] ?? '';
                     final id = result['id'];
+                    final imageFront = result['image_front'];
 
                     setState(() {
-                      cards.add({'flashcardId': id, 'front': front, 'back': back});
+                      cards.add({
+                        'flashcardId': id,
+                        'front': front,
+                        'back': back,
+                        'image_front': imageFront,
+                      });
                     });
                   }
                 },

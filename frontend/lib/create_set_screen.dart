@@ -46,9 +46,9 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
       counter++;
     }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Failed to create set')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Failed to create set')),
+    );
     Navigator.pop(context);
   }
 
@@ -69,23 +69,20 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
   Future<bool> _onWillPop() async {
     final shouldLeave = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Discard changes?'),
-            content: const Text(
-              'You have unsaved changes. Do you really want to leave?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('No'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Yes'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text('Discard changes?'),
+        content: const Text('You have unsaved changes. Do you really want to leave?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('No'),
           ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Yes'),
+          ),
+        ],
+      ),
     );
 
     if (shouldLeave == true) {
@@ -123,11 +120,7 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
             child: InkWell(
               borderRadius: BorderRadius.circular(32),
               onTap: () => _onWillPop(),
-              child: const Icon(
-                Icons.arrow_back,
-                color: Colors.black,
-                size: 32,
-              ),
+              child: const Icon(Icons.arrow_back, color: Colors.black, size: 32),
             ),
           ),
           title: const Text(
@@ -158,6 +151,10 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
               const SizedBox(height: 20),
               ...cards.asMap().entries.map((entry) {
                 final card = entry.value;
+                final front = (card['front'] as String?)?.trim() ?? '';
+                final imageFront = card['image_front'];
+                final displayName = front.isNotEmpty ? front : (imageFront != null ? '[image]' : '');
+
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Container(
@@ -172,7 +169,7 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            card['front'] ?? '',
+                            displayName,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(fontSize: 16),
                           ),
@@ -195,19 +192,17 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
                                 });
                               } else if (result == true) {
                                 try {
-                                  final updated = await ApiService()
-                                      .getFlashcardById(flashcardId);
+                                  final updated = await ApiService().getFlashcardById(flashcardId);
                                   setState(() {
                                     cards[entry.key] = {
                                       'flashcardId': updated['flashcard_id'],
                                       'front': updated['front_side'] ?? '',
                                       'back': updated['back_side'] ?? '',
+                                      'image_front': updated['image_front'],
                                     };
                                   });
                                 } catch (e) {
-                                  debugPrint(
-                                    'Error loading updated flashcard: $e',
-                                  );
+                                  debugPrint('Error loading updated flashcard: $e');
                                 }
                               }
                             }
@@ -231,6 +226,7 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
                         'flashcardId': result['id'],
                         'front': result['front'],
                         'back': result['back'],
+                        'image_front': result['image_front'], // pridané
                       });
                     });
                   }
@@ -260,19 +256,15 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
                 width: double.infinity,
                 height: 54,
                 child: ElevatedButton(
-                  onPressed:
-                      (_setId == null || !_isValidCustomName())
-                          ? null
-                          : () async {
-                            final newName = _setNameController.text.trim();
-                            if (newName != _originalName) {
-                              await ApiService().updateSetName(
-                                _setId!,
-                                newName,
-                              );
-                            }
-                            Navigator.pop(context, true);
-                          },
+                  onPressed: (_setId == null || !_isValidCustomName())
+                      ? null
+                      : () async {
+                          final newName = _setNameController.text.trim();
+                          if (newName != _originalName) {
+                            await ApiService().updateSetName(_setId!, newName);
+                          }
+                          Navigator.pop(context, true);
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,
                     elevation: 3,
