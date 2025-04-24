@@ -337,7 +337,7 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
                               'id': cardId,
                               'front': frontDisplay,
                               'back': backText,
-                              'image_front': frontImage, 
+                              if (frontImage != null) 'image_front': frontImage, 
                             });
                             debugPrint('🔁 Returning new card ID: $cardId');
                           } else {

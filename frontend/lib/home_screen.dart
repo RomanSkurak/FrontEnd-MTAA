@@ -71,7 +71,8 @@ class _HomeScreenState extends State<HomeScreen> {
       final sets = await ApiService().fetchSets();
       if (mounted) {
         setState(() {
-          recentlyAdded = sets.take(4).toList();
+          recentlyAdded = sets.reversed.take(4).toList();
+          //recentlyAdded = sets.take(4).toList();
         });
       }
     } catch (e) {
