@@ -17,13 +17,10 @@ class _HomeScreenState extends State<HomeScreen> {
   late IO.Socket socket;
 
   void connectSocket() {
-    socket = IO.io(
-      'http://10.0.2.2:3000', 
-      <String, dynamic>{
-        'transports': ['websocket'],
-        'autoConnect': true,
-      },
-    );
+    socket = IO.io('http://10.0.2.2:3000', <String, dynamic>{
+      'transports': ['websocket'],
+      'autoConnect': true,
+    });
 
     socket.onConnect((_) {
       print('✅ Pripojený na WebSocket');
@@ -98,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Padding(
         padding: const EdgeInsets.fromLTRB(20, 50, 20, 0),
         child: Column(
@@ -114,8 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(width: 12),
                 Text(
                   username,
-                  style: const TextStyle(
-                    fontSize: 20,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -150,8 +146,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   icon: const Icon(Icons.add, size: 18),
                   label: const Text('Add'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[200],
-                    foregroundColor: Colors.black,
+                    backgroundColor:
+                        Theme.of(context).colorScheme.primaryContainer,
+                    foregroundColor:
+                        Theme.of(context).colorScheme.onPrimaryContainer,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 8,
@@ -171,7 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const Text('No sets yet.')
             else
               ...recentlyAdded.map((set) {
-                  return InkWell(
+                return InkWell(
                   onTap: () {
                     Navigator.pushNamed(
                       context,
@@ -182,8 +180,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 8),
                     decoration: BoxDecoration(
-                      color: Colors.grey[200],
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color:
+                            Theme.of(context).brightness == Brightness.dark
+                                ? Colors.grey.shade700
+                                : Colors.grey.shade300,
+                      ),
                     ),
                     height: 44,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -198,8 +202,14 @@ class _HomeScreenState extends State<HomeScreen> {
             Container(
               height: 100,
               decoration: BoxDecoration(
-                color: Colors.grey[200],
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color:
+                      Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey.shade700
+                          : Colors.grey.shade300,
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -213,7 +223,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       width: 100,
                       height: 70,
                       decoration: BoxDecoration(
-                        color: Colors.grey[300],
+                        color:
+                            Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(FontAwesomeIcons.listUl, size: 30),
@@ -225,7 +238,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       width: 100,
                       height: 70,
                       decoration: BoxDecoration(
-                        color: Colors.grey[300],
+                        color:
+                            Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(FontAwesomeIcons.chartColumn, size: 30),

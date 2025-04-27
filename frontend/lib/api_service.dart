@@ -8,7 +8,7 @@ import 'package:mime/mime.dart';
 
 class ApiService {
   final String baseUrl =
-      'http://10.0.2.2:3000'; // Android emulator -> localhost, http://192.168.0.98:3000
+      'https://backend-mtaa.onrender.com'; // Android emulator -> localhost, http://192.168.0.98:3000
   //http://10.0.2.2:3000
 
   //REGISTER
@@ -185,7 +185,6 @@ class ApiService {
     return false;
   }
 
-
   //VYTVORENIE KARTY
   Future<bool> addFlashcard({
     required int setId,
@@ -196,16 +195,17 @@ class ApiService {
     Uint8List? backImage,
   }) async {
     final token = await getToken();
-    final uri   = Uri.parse('$baseUrl/flashcards');
+    final uri = Uri.parse('$baseUrl/flashcards');
 
-    final request = http.MultipartRequest('POST', uri)
-      ..headers['Authorization'] = 'Bearer $token'
-      ..fields['set_id']     = setId.toString()
-      ..fields['name']       = name
-      ..fields['front_side'] = front
-      ..fields['back_side']  = back
-      ..fields['data_type']  =
-          (frontImage != null || backImage != null) ? 'picture' : 'text';
+    final request =
+        http.MultipartRequest('POST', uri)
+          ..headers['Authorization'] = 'Bearer $token'
+          ..fields['set_id'] = setId.toString()
+          ..fields['name'] = name
+          ..fields['front_side'] = front
+          ..fields['back_side'] = back
+          ..fields['data_type'] =
+              (frontImage != null || backImage != null) ? 'picture' : 'text';
 
     if (frontImage != null) {
       final mimeType = lookupMimeType('front.jpg', headerBytes: frontImage);
@@ -215,7 +215,10 @@ class ApiService {
           'image_front',
           frontImage,
           filename: 'front.${mediaType?[1] ?? 'jpg'}',
-          contentType: MediaType(mediaType?[0] ?? 'image', mediaType?[1] ?? 'jpg'),
+          contentType: MediaType(
+            mediaType?[0] ?? 'image',
+            mediaType?[1] ?? 'jpg',
+          ),
         ),
       );
     }
@@ -228,7 +231,10 @@ class ApiService {
           'image_back',
           backImage,
           filename: 'back.${mediaType?[1] ?? 'jpg'}',
-          contentType: MediaType(mediaType?[0] ?? 'image', mediaType?[1] ?? 'jpg'),
+          contentType: MediaType(
+            mediaType?[0] ?? 'image',
+            mediaType?[1] ?? 'jpg',
+          ),
         ),
       );
     }
@@ -236,7 +242,6 @@ class ApiService {
     final streamed = await request.send();
     return streamed.statusCode == 201;
   }
-
 
   //UPDATE NAZVU SETU
   Future<void> updateSetName(int setId, String newName) async {
@@ -282,14 +287,15 @@ class ApiService {
                 : frontText)
             : '[image]';
 
-    final request = http.MultipartRequest('POST', uri)
-      ..headers['Authorization'] = 'Bearer $token'
-      ..fields['set_id'] = setId.toString()
-      ..fields['name'] = baseName
-      ..fields['data_type'] =
-          (frontImage != null || backImage != null) ? 'picture' : 'text'
-      ..fields['front_side'] = frontText
-      ..fields['back_side'] = backText;
+    final request =
+        http.MultipartRequest('POST', uri)
+          ..headers['Authorization'] = 'Bearer $token'
+          ..fields['set_id'] = setId.toString()
+          ..fields['name'] = baseName
+          ..fields['data_type'] =
+              (frontImage != null || backImage != null) ? 'picture' : 'text'
+          ..fields['front_side'] = frontText
+          ..fields['back_side'] = backText;
 
     if (frontImage != null) {
       final mimeType = lookupMimeType('front.jpg', headerBytes: frontImage);
@@ -299,7 +305,10 @@ class ApiService {
           'image_front',
           frontImage,
           filename: 'front.${mediaType?[1] ?? 'jpg'}',
-          contentType: MediaType(mediaType?[0] ?? 'image', mediaType?[1] ?? 'jpg'),
+          contentType: MediaType(
+            mediaType?[0] ?? 'image',
+            mediaType?[1] ?? 'jpg',
+          ),
         ),
       );
     }
@@ -312,7 +321,10 @@ class ApiService {
           'image_back',
           backImage,
           filename: 'back.${mediaType?[1] ?? 'jpg'}',
-          contentType: MediaType(mediaType?[0] ?? 'image', mediaType?[1] ?? 'jpg'),
+          contentType: MediaType(
+            mediaType?[0] ?? 'image',
+            mediaType?[1] ?? 'jpg',
+          ),
         ),
       );
     }
@@ -335,7 +347,6 @@ class ApiService {
       return null;
     }
   }
-
 
   // LOAD konkretneho setu aj s flashcards
   Future<Map<String, dynamic>> loadSetWithFlashcards(int setId) async {
@@ -389,13 +400,14 @@ class ApiService {
     final token = await getToken();
     final uri = Uri.parse('$baseUrl/flashcards/$flashcardId');
 
-    final request = http.MultipartRequest('PUT', uri)
-      ..headers['Authorization'] = 'Bearer $token'
-      ..fields['name'] = name
-      ..fields['front_side'] = frontText
-      ..fields['back_side'] = backText
-      ..fields['data_type'] =
-          (frontImage != null || backImage != null) ? 'picture' : 'text';
+    final request =
+        http.MultipartRequest('PUT', uri)
+          ..headers['Authorization'] = 'Bearer $token'
+          ..fields['name'] = name
+          ..fields['front_side'] = frontText
+          ..fields['back_side'] = backText
+          ..fields['data_type'] =
+              (frontImage != null || backImage != null) ? 'picture' : 'text';
 
     if (frontImage != null) {
       final mimeType = lookupMimeType('front.jpg', headerBytes: frontImage);
@@ -405,7 +417,10 @@ class ApiService {
           'image_front',
           frontImage,
           filename: 'front.${mediaType?[1] ?? 'jpg'}',
-          contentType: MediaType(mediaType?[0] ?? 'image', mediaType?[1] ?? 'jpg'),
+          contentType: MediaType(
+            mediaType?[0] ?? 'image',
+            mediaType?[1] ?? 'jpg',
+          ),
         ),
       );
     } else {
@@ -420,7 +435,10 @@ class ApiService {
           'image_back',
           backImage,
           filename: 'back.${mediaType?[1] ?? 'jpg'}',
-          contentType: MediaType(mediaType?[0] ?? 'image', mediaType?[1] ?? 'jpg'),
+          contentType: MediaType(
+            mediaType?[0] ?? 'image',
+            mediaType?[1] ?? 'jpg',
+          ),
         ),
       );
     } else {

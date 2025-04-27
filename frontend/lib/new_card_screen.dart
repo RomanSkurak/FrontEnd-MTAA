@@ -75,6 +75,7 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
       context: context,
       barrierDismissible: false,
       builder: (context) {
+        final theme = Theme.of(context);
         return Center(
           child: Material(
             color: Colors.transparent,
@@ -82,7 +83,7 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
               width: 360,
               height: 540,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(16),
               ),
               padding: const EdgeInsets.fromLTRB(15, 15, 15, 8),
@@ -96,7 +97,7 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
                       expands: true,
                       textAlign: TextAlign.center,
                       textAlignVertical: TextAlignVertical.center,
-                      style: const TextStyle(fontSize: 18),
+                      style: theme.textTheme.bodyLarge,
                       decoration: const InputDecoration(
                         isCollapsed: true,
                         contentPadding: EdgeInsets.zero,
@@ -180,10 +181,16 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = theme.textTheme.bodyMedium?.color ?? Colors.black;
+    final frontCardColor = isDark ? Colors.grey[850]! : const Color(0xFFE1E1E1);
+    final backCardColor = isDark ? Colors.grey[700]! : const Color(0xFFC1C1C1);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         centerTitle: true,
         leading: Padding(
@@ -191,12 +198,16 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
           child: InkWell(
             borderRadius: BorderRadius.circular(32),
             onTap: () => Navigator.pop(context),
-            child: const Icon(Icons.arrow_back, color: Colors.black, size: 32),
+            child: Icon(
+              Icons.arrow_back,
+              color: theme.iconTheme.color,
+              size: 32,
+            ),
           ),
         ),
         title: Text(
           isFrontSide ? 'Front side' : 'Back side',
-          style: const TextStyle(color: Colors.black, fontSize: 22),
+          style: theme.textTheme.titleLarge,
         ),
       ),
       body: Padding(
@@ -220,14 +231,14 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
                                 : Text(
                                   backText,
                                   textAlign: TextAlign.center,
-                                  style: const TextStyle(fontSize: 18),
+                                  style: theme.textTheme.bodyLarge,
                                 ))
                             : (frontImage != null
                                 ? Image.memory(frontImage!, fit: BoxFit.contain)
                                 : Text(
                                   frontText,
                                   textAlign: TextAlign.center,
-                                  style: const TextStyle(fontSize: 18),
+                                  style: theme.textTheme.bodyLarge,
                                 ));
 
                     return Transform(
@@ -238,10 +249,7 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
                             ..rotateY(_animation.value),
                       child: Container(
                         decoration: BoxDecoration(
-                          color:
-                              isBack
-                                  ? const Color(0xFFC1C1C1)
-                                  : const Color(0xFFE1E1E1),
+                          color: isBack ? backCardColor : frontCardColor,
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Stack(
@@ -329,15 +337,16 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
                           );
 
                           if (cardId != null) {
-                            String frontDisplay = frontText.trim().isNotEmpty
-                                ? frontText.trim()
-                                : (frontImage != null ? '[image]' : '');
+                            String frontDisplay =
+                                frontText.trim().isNotEmpty
+                                    ? frontText.trim()
+                                    : (frontImage != null ? '[image]' : '');
 
                             Navigator.pop(context, {
                               'id': cardId,
                               'front': frontDisplay,
                               'back': backText,
-                              if (frontImage != null) 'image_front': frontImage, 
+                              if (frontImage != null) 'image_front': frontImage,
                             });
                             debugPrint('🔁 Returning new card ID: $cardId');
                           } else {

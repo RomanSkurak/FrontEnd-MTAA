@@ -19,9 +19,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final password = passwordController.text.trim();
 
     if (name.isEmpty || email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vyplň všetky polia')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Vyplň všetky polia')));
       return;
     }
 
@@ -29,21 +29,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final success = await api.register(name, email, password);
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registrácia úspešná')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Registrácia úspešná')));
       Navigator.pushNamed(context, '/login');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registrácia zlyhala')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Registrácia zlyhala')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context); // 💡 Získaj aktuálnu tému
+    final textColor = theme.textTheme.bodyMedium?.color ?? Colors.black;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.colorScheme.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),

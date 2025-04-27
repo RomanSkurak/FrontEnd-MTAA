@@ -39,12 +39,17 @@ class _EditSetScreenState extends State<EditSetScreen> {
       final List<dynamic> fetchedCards = result['cards'];
 
       setState(() {
-        cards = fetchedCards.map<Map<String, dynamic>>((f) => {
-              'flashcardId': f['flashcard_id'],
-              'front': f['front_side'] ?? '',
-              'back': f['back_side'] ?? '',
-              'image_front': f['image_front'],
-            }).toList();
+        cards =
+            fetchedCards
+                .map<Map<String, dynamic>>(
+                  (f) => {
+                    'flashcardId': f['flashcard_id'],
+                    'front': f['front_side'] ?? '',
+                    'back': f['back_side'] ?? '',
+                    'image_front': f['image_front'],
+                  },
+                )
+                .toList();
         _loading = false;
       });
     } catch (e) {
@@ -67,21 +72,23 @@ class _EditSetScreenState extends State<EditSetScreen> {
   Future<void> _confirmAndDeleteSet() async {
     final shouldDelete = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete set?'),
-        content: const Text(
-            'Are you sure you want to delete this set? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Delete set?'),
+            content: const Text(
+              'Are you sure you want to delete this set? This action cannot be undone.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Delete'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
     );
 
     if (shouldDelete == true) {
@@ -89,9 +96,9 @@ class _EditSetScreenState extends State<EditSetScreen> {
       if (success) {
         Navigator.pop(context, true);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to delete set')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Failed to delete set')));
       }
     }
   }
@@ -103,21 +110,23 @@ class _EditSetScreenState extends State<EditSetScreen> {
 
     final shouldDiscard = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Discard name change?'),
-        content: const Text(
-            'You have unsaved changes to the set name. Do you want to leave without saving the new name?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('No'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Discard name change?'),
+            content: const Text(
+              'You have unsaved changes to the set name. Do you want to leave without saving the new name?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('No'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Yes'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Yes'),
-          ),
-        ],
-      ),
     );
 
     return (shouldDiscard == true);
@@ -125,19 +134,23 @@ class _EditSetScreenState extends State<EditSetScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bgColor = theme.scaffoldBackgroundColor;
+    final cardColor = isDark ? Colors.grey[800] : Colors.grey[200];
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.black;
+
     if (_loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: bgColor,
         appBar: AppBar(
           elevation: 0,
-          backgroundColor: Colors.white,
+          backgroundColor: theme.appBarTheme.backgroundColor,
           centerTitle: true,
           leading: Padding(
             padding: const EdgeInsets.only(left: 20),
@@ -149,14 +162,16 @@ class _EditSetScreenState extends State<EditSetScreen> {
                   Navigator.pop(context);
                 }
               },
-              child: const Icon(Icons.arrow_back, color: Colors.black, size: 32),
+              child: Icon(
+                Icons.arrow_back,
+                color: theme.iconTheme.color,
+                size: 32,
+              ),
             ),
           ),
-          title: const Text(
+          title: Text(
             'Edit set',
-            style: TextStyle(
-              fontSize: 22,
-              color: Colors.black,
+            style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -182,13 +197,16 @@ class _EditSetScreenState extends State<EditSetScreen> {
                 final card = entry.value;
                 final frontText = card['front']?.trim() ?? '';
                 final imageFront = card['image_front'];
-                final displayName = frontText.isNotEmpty ? frontText : (imageFront != null ? '[image]' : '');
+                final displayName =
+                    frontText.isNotEmpty
+                        ? frontText
+                        : (imageFront != null ? '[image]' : '');
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.grey[200],
+                      color: cardColor,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -200,12 +218,12 @@ class _EditSetScreenState extends State<EditSetScreen> {
                           child: Text(
                             displayName,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 16),
+                            style: TextStyle(fontSize: 16, color: textColor),
                           ),
                         ),
                         IconButton(
                           icon: const Icon(Icons.edit, size: 22),
-                          color: Colors.black,
+                          color: theme.iconTheme.color,
                           onPressed: () async {
                             final result = await Navigator.pushNamed(
                               context,
@@ -217,7 +235,8 @@ class _EditSetScreenState extends State<EditSetScreen> {
                               _loadFlashcards();
                             } else if (result == true) {
                               try {
-                                final updated = await ApiService().getFlashcardById(card['flashcardId']);
+                                final updated = await ApiService()
+                                    .getFlashcardById(card['flashcardId']);
                                 setState(() {
                                   cards[entry.key] = {
                                     'flashcardId': updated['flashcard_id'],
@@ -227,7 +246,9 @@ class _EditSetScreenState extends State<EditSetScreen> {
                                   };
                                 });
                               } catch (e) {
-                                debugPrint("Error loading the updated card: $e");
+                                debugPrint(
+                                  "Error loading the updated card: $e",
+                                );
                               }
                             }
                           },
@@ -265,10 +286,13 @@ class _EditSetScreenState extends State<EditSetScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(Icons.add, size: 26),
+                    children: [
+                      Icon(Icons.add, size: 26, color: theme.iconTheme.color),
                       SizedBox(width: 8),
-                      Text('Add card', style: TextStyle(fontSize: 18)),
+                      Text(
+                        'Add card',
+                        style: TextStyle(fontSize: 18, color: textColor),
+                      ),
                     ],
                   ),
                 ),
@@ -283,17 +307,18 @@ class _EditSetScreenState extends State<EditSetScreen> {
             children: [
               Expanded(
                 child: ElevatedButton(
-                  onPressed: !_isValidCustomName()
-                      ? null
-                      : () async {
-                          final newName = _setNameController.text.trim();
-                          if (newName != _originalName) {
-                            await ApiService().updateSetName(_setId, newName);
-                          }
-                          Navigator.pop(context, true);
-                        },
+                  onPressed:
+                      !_isValidCustomName()
+                          ? null
+                          : () async {
+                            final newName = _setNameController.text.trim();
+                            if (newName != _originalName) {
+                              await ApiService().updateSetName(_setId, newName);
+                            }
+                            Navigator.pop(context, true);
+                          },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
+                    backgroundColor: theme.colorScheme.primary,
                     elevation: 3,
                     minimumSize: const Size.fromHeight(50),
                     shape: RoundedRectangleBorder(

@@ -37,14 +37,18 @@ class _GuestScreenState extends State<GuestScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyMedium?.color ?? Colors.black;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Guest Mode'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Logout',
-            onPressed: _logout,
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.pushNamed(context, '/settings');
+            },
           ),
         ],
       ),
@@ -53,11 +57,23 @@ class _GuestScreenState extends State<GuestScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Center(
+              child: ElevatedButton(
+                onPressed: fetchPublicSets,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.secondaryContainer,
+                  foregroundColor: theme.colorScheme.onSecondaryContainer,
+                ),
+                child: const Text('Zobraziť public sety'),
+              ),
+            ),
+            const SizedBox(height: 16),
             const Text(
               'Dostupné verejné sety:',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 12),
+
             Expanded(
               child:
                   publicSets.isEmpty

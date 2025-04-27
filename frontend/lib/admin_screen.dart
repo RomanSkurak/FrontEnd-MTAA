@@ -48,12 +48,6 @@ class _AdminScreenState extends State<AdminScreen> {
     });
   }
 
-  Future<void> _logout() async {
-    await ApiService().logout();
-    if (!mounted) return;
-    Navigator.pushReplacementNamed(context, '/login');
-  }
-
   @override
   void initState() {
     super.initState();
@@ -62,14 +56,19 @@ class _AdminScreenState extends State<AdminScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyMedium?.color ?? Colors.black;
+
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Admin Panel'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Odhlásiť sa',
-            onPressed: _logout,
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.pushNamed(context, '/settings');
+            },
           ),
         ],
       ),
@@ -78,10 +77,7 @@ class _AdminScreenState extends State<AdminScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Vytvor nový public set:',
-              style: TextStyle(fontSize: 18),
-            ),
+            Text('Vytvor nový public set:', style: theme.textTheme.titleMedium),
             const SizedBox(height: 12),
             TextField(
               controller: _setNameController,
@@ -93,11 +89,19 @@ class _AdminScreenState extends State<AdminScreen> {
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: createPublicSet,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: theme.colorScheme.onPrimary,
+              ),
               child: const Text('Vytvoriť set'),
             ),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: fetchPublicSets,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.secondaryContainer,
+                foregroundColor: theme.colorScheme.onSecondaryContainer,
+              ),
               child: const Text('Zobraziť public sety'),
             ),
             const SizedBox(height: 16),

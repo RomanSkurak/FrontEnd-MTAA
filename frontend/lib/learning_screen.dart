@@ -59,8 +59,9 @@ class _LearningScreenState extends State<LearningScreen>
       final raw = data['cards'] as List<dynamic>;
 
       if (raw.isEmpty && mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('This set has no flashcards.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('This set has no flashcards.')),
+        );
         Navigator.pop(context);
         return;
       }
@@ -79,9 +80,9 @@ class _LearningScreenState extends State<LearningScreen>
       setState(() => _isLoading = false);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load cards: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load cards: $e')));
         Navigator.pop(context);
       }
     }
@@ -132,39 +133,50 @@ class _LearningScreenState extends State<LearningScreen>
 
   Widget _buildContent(bool isBack) {
     final c = _cards[_currentIndex];
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodyLarge?.copyWith(fontSize: 18);
+
     if (isBack) {
       return c.backImage != null
-          ? Image.memory(c.backImage!, fit: BoxFit.contain, gaplessPlayback: true)
-          : Text(
-              c.backText,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 18),
-            );
+          ? Image.memory(
+            c.backImage!,
+            fit: BoxFit.contain,
+            gaplessPlayback: true,
+          )
+          : Text(c.backText, textAlign: TextAlign.center, style: textStyle);
     } else {
       return c.frontImage != null
-          ? Image.memory(c.frontImage!, fit: BoxFit.contain, gaplessPlayback: true)
-          : Text(
-              c.frontText,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 18),
-            );
+          ? Image.memory(
+            c.frontImage!,
+            fit: BoxFit.contain,
+            gaplessPlayback: true,
+          )
+          : Text(c.frontText, textAlign: TextAlign.center, style: textStyle);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final frontCardColor = isDark ? Colors.grey[850]! : const Color(0xFFE1E1E1);
+    final backCardColor = isDark ? Colors.grey[700]! : const Color(0xFFC1C1C1);
+    final iconColor = theme.iconTheme.color;
+    final textStyle = theme.textTheme.bodyLarge;
+
     if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: Colors.white,
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_cards.isEmpty) {
       return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: theme.appBarTheme.backgroundColor,
           elevation: 0,
           centerTitle: true,
           leading: Padding(
@@ -172,18 +184,20 @@ class _LearningScreenState extends State<LearningScreen>
             child: InkWell(
               borderRadius: BorderRadius.circular(32),
               onTap: () => Navigator.pop(context),
-              child: const Icon(Icons.arrow_back, color: Colors.black, size: 32),
+              child: Icon(Icons.arrow_back, color: iconColor, size: 32),
             ),
           ),
-          title: const Text(
+          title: Text(
             'Done!',
-            style: TextStyle(fontSize: 22, color: Colors.black),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-        body: const Center(
+        body: Center(
           child: Text(
             'You have completed all cards in this set.',
-            style: TextStyle(fontSize: 18),
+            style: textStyle,
             textAlign: TextAlign.center,
           ),
         ),
@@ -191,9 +205,9 @@ class _LearningScreenState extends State<LearningScreen>
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: theme.appBarTheme.backgroundColor,
         elevation: 0,
         centerTitle: true,
         leading: Padding(
@@ -201,12 +215,12 @@ class _LearningScreenState extends State<LearningScreen>
           child: InkWell(
             borderRadius: BorderRadius.circular(32),
             onTap: () => Navigator.pop(context),
-            child: const Icon(Icons.arrow_back, color: Colors.black, size: 32),
+            child: Icon(Icons.arrow_back, color: iconColor, size: 32),
           ),
         ),
         title: Text(
           '${_currentIndex + 1}/${_cards.length}',
-          style: const TextStyle(fontSize: 22, color: Colors.black),
+          style: theme.textTheme.titleMedium,
         ),
       ),
       body: Padding(
@@ -221,12 +235,12 @@ class _LearningScreenState extends State<LearningScreen>
                 transitionBuilder: (child, animation) {
                   return ScaleTransition(
                     scale: Tween<double>(begin: 0.85, end: 1.0).animate(
-                      CurvedAnimation(parent: animation, curve: Curves.decelerate),
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.decelerate,
+                      ),
                     ),
-                    child: FadeTransition(
-                      opacity: animation,
-                      child: child,
-                    ),
+                    child: FadeTransition(opacity: animation, child: child),
                   );
                 },
                 child: SizedBox(
@@ -239,14 +253,13 @@ class _LearningScreenState extends State<LearningScreen>
                       final isBack = _animation.value >= pi / 2;
                       return Transform(
                         alignment: Alignment.center,
-                        transform: Matrix4.identity()
-                          ..setEntry(3, 2, 0.001)
-                          ..rotateY(_animation.value),
+                        transform:
+                            Matrix4.identity()
+                              ..setEntry(3, 2, 0.001)
+                              ..rotateY(_animation.value),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: isBack
-                                ? const Color(0xFFC1C1C1)
-                                : const Color(0xFFE1E1E1),
+                            color: isBack ? backCardColor : frontCardColor,
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Stack(
@@ -254,17 +267,27 @@ class _LearningScreenState extends State<LearningScreen>
                             children: [
                               Transform(
                                 alignment: Alignment.center,
-                                transform: isBack
-                                    ? Matrix4.rotationY(pi)
-                                    : Matrix4.identity(),
+                                transform:
+                                    isBack
+                                        ? Matrix4.rotationY(pi)
+                                        : Matrix4.identity(),
                                 child: Padding(
-                                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 48),
+                                  padding: const EdgeInsets.fromLTRB(
+                                    24,
+                                    24,
+                                    24,
+                                    48,
+                                  ),
                                   child: _buildContent(isBack),
                                 ),
                               ),
-                              const Positioned(
+                              Positioned(
                                 bottom: 12,
-                                child: Icon(Icons.sync, size: 28, color: Colors.black54),
+                                child: Icon(
+                                  Icons.sync,
+                                  size: 28,
+                                  color: iconColor?.withOpacity(0.6),
+                                ),
                               ),
                             ],
                           ),
@@ -282,12 +305,12 @@ class _LearningScreenState extends State<LearningScreen>
                 IconButton(
                   iconSize: 48,
                   onPressed: _onDidNotKnow,
-                  icon: const Icon(Icons.close, color: Colors.black),
+                  icon: Icon(Icons.close, color: iconColor),
                 ),
                 IconButton(
                   iconSize: 48,
                   onPressed: _onKnewIt,
-                  icon: const Icon(Icons.check, color: Colors.black),
+                  icon: Icon(Icons.check, color: iconColor),
                 ),
               ],
             ),

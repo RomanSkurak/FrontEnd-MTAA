@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'api_service.dart';
 
-
 class EditCardScreen extends StatefulWidget {
   final int flashcardId;
 
@@ -57,12 +56,18 @@ class _EditCardScreenState extends State<EditCardScreen>
         final backBase64 = data['image_back'];
 
         if (frontBase64 != null && frontBase64.isNotEmpty) {
-          final cleanedFront = frontBase64.replaceAll(RegExp(r'[^A-Za-z0-9+/=]+'), '');
+          final cleanedFront = frontBase64.replaceAll(
+            RegExp(r'[^A-Za-z0-9+/=]+'),
+            '',
+          );
           frontImage = base64Decode(cleanedFront);
         }
 
         if (backBase64 != null && backBase64.isNotEmpty) {
-          final cleanedBack = backBase64.replaceAll(RegExp(r'[^A-Za-z0-9+/=]+'), '');
+          final cleanedBack = backBase64.replaceAll(
+            RegExp(r'[^A-Za-z0-9+/=]+'),
+            '',
+          );
           backImage = base64Decode(cleanedBack);
         }
       });
@@ -80,9 +85,8 @@ class _EditCardScreenState extends State<EditCardScreen>
 
   bool _isCardFilled() {
     return (frontText.trim().isNotEmpty || frontImage != null) &&
-           (backText.trim().isNotEmpty || backImage != null);
+        (backText.trim().isNotEmpty || backImage != null);
   }
-
 
   bool _hasUnsavedChanges() {
     if (frontText.trim() != _originalFrontText.trim()) return true;
@@ -114,20 +118,23 @@ class _EditCardScreenState extends State<EditCardScreen>
   Future<bool> _confirmDiscardChanges() async {
     final shouldDiscard = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Discard changes?'),
-        content: const Text('You have unsaved changes. Do you want to leave without saving?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('No'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Discard changes?'),
+            content: const Text(
+              'You have unsaved changes. Do you want to leave without saving?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('No'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Yes'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Yes'),
-          ),
-        ],
-      ),
     );
 
     return (shouldDiscard == true);
@@ -137,7 +144,7 @@ class _EditCardScreenState extends State<EditCardScreen>
     if (!_hasUnsavedChanges()) return true;
 
     final discard = await _confirmDiscardChanges();
-    return discard; 
+    return discard;
   }
 
   void _flipCard() {
@@ -201,8 +208,9 @@ class _EditCardScreenState extends State<EditCardScreen>
                         child: const Text('Cancel'),
                       ),
                       ElevatedButton(
-                        onPressed: () =>
-                            Navigator.pop(context, controller.text.trim()),
+                        onPressed:
+                            () =>
+                                Navigator.pop(context, controller.text.trim()),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.black,
                           foregroundColor: Colors.white,
@@ -223,7 +231,7 @@ class _EditCardScreenState extends State<EditCardScreen>
       setState(() {
         if (isFrontSide) {
           frontText = typedText;
-          frontImage = null; 
+          frontImage = null;
         } else {
           backText = typedText;
           backImage = null;
@@ -263,39 +271,48 @@ class _EditCardScreenState extends State<EditCardScreen>
   Future<void> _confirmAndDeleteCard() async {
     final shouldDelete = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete card?'),
-        content: const Text(
-            'Are you sure you want to delete this card? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Delete card?'),
+            content: const Text(
+              'Are you sure you want to delete this card? This action cannot be undone.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Delete'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
     );
 
     if (shouldDelete == true) {
       final success = await ApiService().deleteFlashcard(widget.flashcardId);
       if (success && mounted) {
-        Navigator.pop(context, 'deleted'); 
+        Navigator.pop(context, 'deleted');
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bgColor = theme.scaffoldBackgroundColor;
+    final cardFrontColor = isDark ? Colors.grey[800] : const Color(0xFFE1E1E1);
+    final cardBackColor = isDark ? Colors.grey[700] : const Color(0xFFC1C1C1);
+    final textColor = theme.textTheme.bodyLarge?.color ?? Colors.black;
+
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: bgColor,
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: bgColor,
           elevation: 0,
           centerTitle: true,
           leading: Padding(
@@ -308,12 +325,16 @@ class _EditCardScreenState extends State<EditCardScreen>
                   Navigator.pop(context);
                 }
               },
-              child: const Icon(Icons.arrow_back, color: Colors.black, size: 32),
+              child: Icon(
+                Icons.arrow_back,
+                color: theme.iconTheme.color,
+                size: 32,
+              ),
             ),
           ),
           title: Text(
             isFrontSide ? 'Front side' : 'Back side',
-            style: const TextStyle(color: Colors.black, fontSize: 22),
+            style: theme.textTheme.titleMedium,
           ),
         ),
         body: Padding(
@@ -330,32 +351,44 @@ class _EditCardScreenState extends State<EditCardScreen>
                     animation: _animation,
                     builder: (context, child) {
                       final isBack = _animation.value >= pi / 2;
-                      final content = isBack
-                          ? (backImage != null
-                              ? Image.memory(backImage!, fit: BoxFit.contain)
-                              : Text(
-                                  backText,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(fontSize: 18),
-                                ))
-                          : (frontImage != null
-                              ? Image.memory(frontImage!, fit: BoxFit.contain)
-                              : Text(
-                                  frontText,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(fontSize: 18),
-                                ));
+                      final content =
+                          isBack
+                              ? (backImage != null
+                                  ? Image.memory(
+                                    backImage!,
+                                    fit: BoxFit.contain,
+                                  )
+                                  : Text(
+                                    backText,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: textColor,
+                                    ),
+                                  ))
+                              : (frontImage != null
+                                  ? Image.memory(
+                                    frontImage!,
+                                    fit: BoxFit.contain,
+                                  )
+                                  : Text(
+                                    frontText,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: textColor,
+                                    ),
+                                  ));
 
                       return Transform(
                         alignment: Alignment.center,
-                        transform: Matrix4.identity()
-                          ..setEntry(3, 2, 0.001)
-                          ..rotateY(_animation.value),
+                        transform:
+                            Matrix4.identity()
+                              ..setEntry(3, 2, 0.001)
+                              ..rotateY(_animation.value),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: isBack
-                                ? const Color(0xFFC1C1C1)
-                                : const Color(0xFFE1E1E1),
+                            color: isBack ? cardBackColor : cardFrontColor,
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Stack(
@@ -363,12 +396,17 @@ class _EditCardScreenState extends State<EditCardScreen>
                             children: [
                               Transform(
                                 alignment: Alignment.center,
-                                transform: isBack
-                                    ? Matrix4.rotationY(pi)
-                                    : Matrix4.identity(),
+                                transform:
+                                    isBack
+                                        ? Matrix4.rotationY(pi)
+                                        : Matrix4.identity(),
                                 child: Padding(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(24, 24, 24, 48),
+                                  padding: const EdgeInsets.fromLTRB(
+                                    24,
+                                    24,
+                                    24,
+                                    48,
+                                  ),
                                   child: content,
                                 ),
                               ),
@@ -376,10 +414,10 @@ class _EditCardScreenState extends State<EditCardScreen>
                                 bottom: 12,
                                 child: GestureDetector(
                                   onTap: _flipCard,
-                                  child: const Icon(
+                                  child: Icon(
                                     Icons.sync,
                                     size: 28,
-                                    color: Colors.black54,
+                                    color: textColor.withOpacity(0.5),
                                   ),
                                 ),
                               ),
@@ -398,16 +436,18 @@ class _EditCardScreenState extends State<EditCardScreen>
                   ElevatedButton(
                     onPressed: _editText,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[200],
-                      foregroundColor: Colors.black,
+                      backgroundColor:
+                          isDark ? Colors.grey[800] : Colors.grey[200],
+                      foregroundColor: textColor,
                     ),
                     child: const Text('Change text'),
                   ),
                   ElevatedButton(
                     onPressed: _pickImage,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[200],
-                      foregroundColor: Colors.black,
+                      backgroundColor:
+                          isDark ? Colors.grey[800] : Colors.grey[200],
+                      foregroundColor: textColor,
                     ),
                     child: const Text('Change image'),
                   ),
@@ -423,44 +463,46 @@ class _EditCardScreenState extends State<EditCardScreen>
             children: [
               Expanded(
                 child: ElevatedButton(
-                  onPressed: _isCardFilled()
-                      ? () async {
-                          String baseName = frontText.trim().isNotEmpty
-                              ? (frontText.length > 15
-                                  ? '${frontText.substring(0, 15)}...'
-                                  : frontText)
-                              : '[image]';
+                  onPressed:
+                      _isCardFilled()
+                          ? () async {
+                            String baseName =
+                                frontText.trim().isNotEmpty
+                                    ? (frontText.length > 15
+                                        ? '${frontText.substring(0, 15)}...'
+                                        : frontText)
+                                    : '[image]';
 
-                          final success = await ApiService().updateFlashcard(
-                            flashcardId: widget.flashcardId,
-                            frontText: frontText,
-                            backText: backText,
-                            frontImage: frontImage,
-                            backImage: backImage,
-                            name: baseName,
-                          );
-
-                          if (success && mounted) {
-                            Navigator.pop(context, true);
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('Failed to update card')),
+                            final success = await ApiService().updateFlashcard(
+                              flashcardId: widget.flashcardId,
+                              frontText: frontText,
+                              backText: backText,
+                              frontImage: frontImage,
+                              backImage: backImage,
+                              name: baseName,
                             );
+
+                            if (success && mounted) {
+                              Navigator.pop(context, true);
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Failed to update card'),
+                                ),
+                              );
+                            }
                           }
-                        }
-                      : null,
+                          : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: Colors.white,
                     minimumSize: const Size.fromHeight(50),
                     elevation: 3,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child: const Text(
-                    'Update card',
-                    style: TextStyle(fontSize: 16, color: Colors.white),
-                  ),
+                  child: const Text('Update card'),
                 ),
               ),
               const SizedBox(width: 28),
@@ -469,10 +511,12 @@ class _EditCardScreenState extends State<EditCardScreen>
                   onPressed: _confirmAndDeleteCard,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
                     minimumSize: const Size.fromHeight(50),
                     elevation: 3,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: const Text(
                     'Delete card',

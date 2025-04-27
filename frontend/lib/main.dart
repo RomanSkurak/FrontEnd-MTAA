@@ -4,6 +4,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 import 'login_screen.dart';
 import 'register_screen.dart';
@@ -23,7 +25,9 @@ import 'learning_screen.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
+final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
+@pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((taskName, inputData) async {
     final prefs = await SharedPreferences.getInstance();
@@ -75,20 +79,63 @@ void main() async {
     ),
   );
 
-  await Workmanager().initialize(callbackDispatcher, isInDebugMode: true);
+  await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
 
+  //await Workmanager().cancelAll(); // zruší všetky tasky
   await Workmanager().registerPeriodicTask(
     "studyReminderTask",
     "reminderTask",
-    frequency: Duration(hours: 6),
-    initialDelay: Duration(minutes: 1), 
+    frequency: Duration(hours: 1),
+    initialDelay: Duration(minutes: 1),
   );
+
+  await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+
+  // Zaznamenaj všetky Flutter chyby
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
 
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  static _MyAppState? of(BuildContext context) =>
+      context.findAncestorStateOfType<_MyAppState>();
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  ThemeMode _themeMode = ThemeMode.system;
+
+  void setTheme(ThemeMode mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() => _themeMode = mode);
+    prefs.setString('themeMode', mode.name);
+  }
+
+  Future<void> loadTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedTheme = prefs.getString('themeMode');
+
+    setState(() {
+      if (savedTheme == 'dark') {
+        _themeMode = ThemeMode.dark;
+      } else if (savedTheme == 'light') {
+        _themeMode = ThemeMode.light;
+      } else {
+        _themeMode = ThemeMode.system;
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadTheme();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,6 +143,9 @@ class MyApp extends StatelessWidget {
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'StudyBro',
+      themeMode: _themeMode,
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
       home: const SplashScreen(),
       routes: {
         '/login': (context) => const LoginScreen(),
@@ -108,14 +158,15 @@ class MyApp extends StatelessWidget {
         '/create': (context) => const CreateSetScreen(),
         '/newcard': (context) => NewCardScreen(),
         '/editset': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as FlashcardSet;
-          return editSet.EditSetScreen(flashcardSet: args); 
+          final args =
+              ModalRoute.of(context)!.settings.arguments as FlashcardSet;
+          return editSet.EditSetScreen(flashcardSet: args);
         },
         '/editcard': (context) {
           final flashcardId = ModalRoute.of(context)!.settings.arguments as int;
           return editCard.EditCardScreen(flashcardId: flashcardId);
         },
-        '/learn': (context) {                         
+        '/learn': (context) {
           final setId = ModalRoute.of(context)!.settings.arguments as int;
           return LearningScreen(setId: setId);
         },
