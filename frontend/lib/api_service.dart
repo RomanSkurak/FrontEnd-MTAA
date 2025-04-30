@@ -9,7 +9,7 @@ import 'package:mime/mime.dart';
 class ApiService {
   final String baseUrl =
       'https://backend-mtaa.onrender.com'; // Android emulator -> localhost, http://192.168.0.98:3000
-  //http://10.0.2.2:3000
+  //http://10.0.2.2:3000 , https://backend-mtaa.onrender.com
 
   //REGISTER
   Future<bool> register(String name, String email, String password) async {
@@ -44,23 +44,6 @@ class ApiService {
       return true;
     } else {
       return false;
-    }
-  }
-
-  //STATISTICS
-  Future<Map<String, dynamic>?> getStatistics() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-
-    final response = await http.get(
-      Uri.parse('$baseUrl/statistics'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      return null;
     }
   }
 
@@ -100,6 +83,11 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
     await prefs.remove('role');
+    await prefs.remove('token');
+    await prefs.remove('role');
+    await prefs.remove('local_username');
+    await prefs.remove('local_password_hash');
+    await prefs.remove('local_name');
   }
 
   //ZISKANIE SETOV
@@ -469,19 +457,41 @@ class ApiService {
 
   // GET CURRENT USER INFO
   Future<Map<String, dynamic>?> getCurrentUser() async {
-    final token = await getToken();
+    final prefs = await SharedPreferences.getInstance();
 
-    final response = await http.get(
-      Uri.parse('$baseUrl/me'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
+    try {
+      final token = await getToken();
 
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      print('Error loading user data: ${response.body}');
-      return null;
+      final response = await http.get(
+        Uri.parse('$baseUrl/me'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        final user = jsonDecode(response.body);
+
+        // ✅ Ulož "name" pre offline režim (lebo backend vracia "name")
+        if (user['name'] != null) {
+          await prefs.setString('local_name', user['name']);
+        }
+
+        return user;
+      } else {
+        print(
+          '❌ Error loading user data: ${response.statusCode} → ${response.body}',
+        );
+      }
+    } catch (e) {
+      print('📴 Offline or request failed: $e');
     }
+
+    // ✅ Offline fallback s rovnakým kľúčom "name"
+    final localName = prefs.getString('local_name');
+    if (localName != null) {
+      return {'name': localName};
+    }
+
+    return null;
   }
 
   //Odoslanie FCM tokenu
@@ -500,6 +510,65 @@ class ApiService {
       print('FCM token úspešne uložený!');
     } else {
       print('Chyba pri odosielaní tokenu: ${response.body}');
+    }
+  }
+
+  /// Odošle jednu learning session a vráti aktualizované štatistiky.
+  Future<Map<String, dynamic>> submitLearningSession({
+    required DateTime startTime,
+    required DateTime endTime,
+    required int correct,
+    required int total,
+  }) async {
+    final uri = Uri.parse('$baseUrl/learning-sessions');
+    final token = await getToken();
+    final body = {
+      'start_time': startTime.toIso8601String(),
+      'end_time': endTime.toIso8601String(),
+      'correct_answers': correct,
+      'total_answers': total,
+    };
+    final res = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (res.statusCode == 201) {
+      final decoded = jsonDecode(res.body) as Map<String, dynamic>;
+      // podľa nášho BE vraciame { session: {...}, statistics: {...} }
+      return decoded['statistics'] as Map<String, dynamic>;
+    } else {
+      throw Exception('Chyba pri odosielaní session: ${res.statusCode}');
+    }
+  }
+
+  /// Načíta aktuálne štatistiky používateľa.
+  Future<Map<String, dynamic>> getStatistics() async {
+    final uri = Uri.parse('$baseUrl/statistics');
+    final token = await getToken();
+
+    try {
+      final res = await http.get(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body) as Map<String, dynamic>;
+      } else {
+        throw Exception('Chyba pri načítaní štatistík: ${res.statusCode}');
+      }
+    } catch (e) {
+      print('📴 Offline alebo chyba siete pri načítaní štatistík: $e');
+      // 💥 Toto zabráni otvoreniu StatisticsScreen:
+      throw Exception('Offline režim – štatistiky nie sú dostupné');
     }
   }
 }

@@ -28,6 +28,11 @@ class LearningScreen extends StatefulWidget {
 
 class _LearningScreenState extends State<LearningScreen>
     with SingleTickerProviderStateMixin {
+  // PRIDANÉ PRE ŠTATISTIKY
+  late DateTime _sessionStart;
+  int _correctCount = 0;
+  int _totalCount = 0;
+
   late final AnimationController _controller;
   late final Animation<double> _animation;
 
@@ -39,6 +44,9 @@ class _LearningScreenState extends State<LearningScreen>
   @override
   void initState() {
     super.initState();
+    // začiatok sedenia
+    _sessionStart = DateTime.now();
+
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
@@ -108,12 +116,32 @@ class _LearningScreenState extends State<LearningScreen>
     _controller.reset();
   }
 
+  Future<void> _submitSession() async {
+    final endTime = DateTime.now();
+    try {
+      await ApiService().submitLearningSession(
+        startTime: _sessionStart,
+        endTime: endTime,
+        correct: _correctCount,
+        total: _totalCount,
+      );
+      // prípadne zobraz snackBar alebo iná UX odozva
+    } catch (e) {
+      // log alebo upozorniť používateľa
+      debugPrint('Error submitting session: $e');
+    }
+  }
+
   void _onKnewIt() {
+    _correctCount++;
+    _totalCount++;
     Future.delayed(const Duration(milliseconds: 300), () {
       setState(() {
         _cards.removeAt(_currentIndex);
         if (_cards.isEmpty) {
           _resetCardSide();
+          _submitSession(); // ── po poslednej karte odošli session
+
           return;
         }
         _currentIndex %= _cards.length;
@@ -123,9 +151,14 @@ class _LearningScreenState extends State<LearningScreen>
   }
 
   void _onDidNotKnow() {
+    _totalCount++;
     Future.delayed(const Duration(milliseconds: 300), () {
       setState(() {
         _currentIndex = (_currentIndex + 1) % _cards.length;
+        if (_cards.isEmpty) {
+          _submitSession(); // ── ak by cards prázdne (extra istota)
+          return;
+        }
         _resetCardSide();
       });
     });

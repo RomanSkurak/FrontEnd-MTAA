@@ -17,7 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late IO.Socket socket;
 
   void connectSocket() {
-    socket = IO.io('http://10.0.2.2:3000', <String, dynamic>{
+    socket = IO.io('https://backend-mtaa.onrender.com', <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': true,
     });
@@ -78,16 +78,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _navigateToStatistics(BuildContext context) async {
-    final stats = await ApiService().getStatistics();
-    if (stats != null) {
+    try {
+      //final stats = await ApiService().getStatistics();
+
       await Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => StatisticsScreen(stats: stats)),
+        MaterialPageRoute(builder: (context) => const StatisticsScreen()),
       );
+
       _loadRecentSets();
-    } else {
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to load statistics")),
+        const SnackBar(content: Text("Štatistiky sú dostupné len online")),
       );
     }
   }

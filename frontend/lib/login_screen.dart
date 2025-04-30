@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -32,6 +34,12 @@ class _LoginScreenState extends State<LoginScreen> {
       // TODO: Presmerovanie do domovskej obrazovky
       final prefs = await SharedPreferences.getInstance();
       final role = prefs.getString('role');
+      // po úspešnom login response
+      await prefs.setString('local_username', email);
+      await prefs.setString(
+        'local_password_hash',
+        sha256.convert(utf8.encode(password)).toString(),
+      );
 
       FirebaseAnalytics.instance.logEvent(name: 'login_success');
 
