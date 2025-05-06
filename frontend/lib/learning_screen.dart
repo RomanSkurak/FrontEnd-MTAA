@@ -3,6 +3,9 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'api_service.dart';
+import 'package:hive/hive.dart';
+import 'offline_models.dart';
+import 'connectivity_service.dart';
 
 class _Flashcard {
   final String frontText;
@@ -61,38 +64,80 @@ class _LearningScreenState extends State<LearningScreen>
     return base64Decode(cleaned);
   }
 
+  
   Future<void> _loadCards() async {
-    try {
-      final data = await ApiService().loadSetWithFlashcards(widget.setId);
-      final raw = data['cards'] as List<dynamic>;
+    final isOnline = await ConnectivityService.isOnline();
 
-      if (raw.isEmpty && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('This set has no flashcards.')),
-        );
-        Navigator.pop(context);
+    if (isOnline) {
+      try {
+        final data = await ApiService().loadSetWithFlashcards(widget.setId);
+        final raw = data['cards'] as List<dynamic>;
+
+        if (raw.isEmpty && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('This set has no flashcards.')),
+          );
+          Navigator.pop(context);
+          return;
+        }
+
+        for (final c in raw) {
+          _cards.add(
+            _Flashcard(
+              frontText: c['front_side'] ?? '',
+              backText: c['back_side'] ?? '',
+              frontImage: _decode(c['image_front']),
+              backImage: _decode(c['image_back']),
+            ),
+          );
+        }
+
+        setState(() => _isLoading = false);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to load cards: $e')),
+          );
+          Navigator.pop(context);
+        }
+      }
+    } else {
+      final box = Hive.box<OfflineFlashcardSet>('offlineSets');
+      final offlineSet = box.values.firstWhere(
+        (s) => s.setId == widget.setId,
+        orElse: () => OfflineFlashcardSet(
+          setId: 0,
+          name: '',
+          isPublic: false,
+          userId: 0,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          flashcards: [],
+        ),
+      );
+
+      if (offlineSet.flashcards.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('This set has no flashcards.')),
+          );
+          Navigator.pop(context);
+        }
         return;
       }
 
-      for (final c in raw) {
+      for (final c in offlineSet.flashcards) {
         _cards.add(
           _Flashcard(
-            frontText: c['front_side'] ?? '',
-            backText: c['back_side'] ?? '',
-            frontImage: _decode(c['image_front']),
-            backImage: _decode(c['image_back']),
+            frontText: c.front,
+            backText: c.back,
+            frontImage: c.imageFront,
+            backImage: c.imageBack,
           ),
         );
       }
 
       setState(() => _isLoading = false);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to load cards: $e')));
-        Navigator.pop(context);
-      }
     }
   }
 

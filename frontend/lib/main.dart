@@ -7,6 +7,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:path_provider/path_provider.dart';
+import 'offline_models.dart';
+
 import 'login_screen.dart';
 import 'register_screen.dart';
 import 'home_screen.dart';
@@ -62,6 +66,14 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await FirebaseMessaging.instance.requestPermission();
+
+  final appDocDir = await getApplicationDocumentsDirectory();
+  await Hive.initFlutter(appDocDir.path);
+
+  Hive.registerAdapter(OfflineFlashcardSetAdapter());
+  Hive.registerAdapter(OfflineFlashcardAdapter());
+
+  await Hive.openBox<OfflineFlashcardSet>('offlineSets');
 
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     print('📥 Push prišiel (foreground): ${message.notification?.title}');
