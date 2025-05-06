@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'api_service.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class EditCardScreen extends StatefulWidget {
   final int flashcardId;
@@ -246,6 +247,17 @@ class _EditCardScreenState extends State<EditCardScreen>
     if (isPickingImage) return;
 
     setState(() => isPickingImage = true);
+
+    final status = await Permission.photos.request(); // iOS
+    final androidStatus = await Permission.storage.request(); // Android
+
+    if (!status.isGranted && !androidStatus.isGranted) {
+      setState(() => isPickingImage = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Permission to access gallery denied')),
+      );
+      return;
+    }
 
     try {
       final XFile? image = await _picker.pickImage(source: ImageSource.gallery);

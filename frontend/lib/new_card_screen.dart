@@ -3,6 +3,8 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 import 'dart:math';
 import 'api_service.dart';
+import 'package:permission_handler/permission_handler.dart';
+
 
 class NewCardScreen extends StatelessWidget {
   const NewCardScreen({super.key});
@@ -158,6 +160,17 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
 
     setState(() => isPickingImage = true);
 
+    final status = await Permission.photos.request(); // iOS
+    final androidStatus = await Permission.storage.request(); // Android
+
+    if (!status.isGranted && !androidStatus.isGranted) {
+      setState(() => isPickingImage = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Permission to access gallery denied')),
+      );
+      return;
+    }
+
     try {
       final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
       if (image != null) {
@@ -178,6 +191,7 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
       setState(() => isPickingImage = false);
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
