@@ -85,7 +85,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (online) {
       try {
-        final remoteSets = await ApiService().fetchSets();
+        final remoteSets = await ApiService().fetchSets()
+        ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
         await box.clear();
 
         await Future.wait(remoteSets.map((set) async {

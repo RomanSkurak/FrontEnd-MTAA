@@ -43,7 +43,8 @@ class _ListOfSetsScreenState extends State<ListOfSetsScreen> {
     if (online) {
       try {
         debugPrint('🌐 Online – sťahujem zo servera');
-        final remoteSets = await ApiService().fetchSets();
+        final remoteSets = await ApiService().fetchSets()
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt)); // tu triedenie
         await box.clear();
 
         /* -------- načítaj všetky flashcardy paralelne -------- */
@@ -91,7 +92,7 @@ class _ListOfSetsScreenState extends State<ListOfSetsScreen> {
 
   void _loadFromHive(Box<OfflineFlashcardSet> box) {
     final local = box.values.toList()
-      ..sort((a, b) => a.createdAt.compareTo(b.createdAt)); 
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt)); 
     _sets = local
         .map((s) => FlashcardSet(
               setId:     s.setId,
