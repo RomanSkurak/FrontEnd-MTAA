@@ -379,7 +379,7 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
                   ),
                 ),
                 child: const Text(
-                  'Add card to set',
+                  'Update card',
                   style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
               ),

@@ -113,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
           await box.add(offlineSet);
         }));
-
+        if (!mounted) return;
         setState(() {
           recentlyAdded = remoteSets.reversed.take(4).toList();
         });
@@ -216,7 +216,7 @@ Widget build(BuildContext context) {
                         ),
                       ),
                       ElevatedButton.icon(
-                        onPressed: () async {
+                       onPressed: () async {
                           final online = await ConnectivityService.isOnline();
                           if (!online) {
                             if (mounted) {
@@ -236,8 +236,13 @@ Widget build(BuildContext context) {
                             }
                             return;
                           }
-                          await Navigator.pushNamed(context, '/create');
-                          _loadRecentSets();
+
+                          final result = await Navigator.pushNamed(context, '/create');
+                          await Future.delayed(const Duration(milliseconds: 10));
+                          if (!mounted) return;
+                          if (result != null) {
+                            _loadRecentSets();
+                          }
                         },
                         icon: const Icon(Icons.add, size: 18),
                         label: const Text('Add'),

@@ -231,12 +231,16 @@ class _EditSetScreenState extends State<EditSetScreen> {
                               arguments: card['flashcardId'],
                             );
 
+                            if (!mounted) return;
+
                             if (result == 'deleted') {
-                              _loadFlashcards();
+                              await _loadFlashcards(); // odstránenie už riešiš
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Card was deleted')),
+                              );
                             } else if (result == true) {
                               try {
-                                final updated = await ApiService()
-                                    .getFlashcardById(card['flashcardId']);
+                                final updated = await ApiService().getFlashcardById(card['flashcardId']);
                                 setState(() {
                                   cards[entry.key] = {
                                     'flashcardId': updated['flashcard_id'],
@@ -245,10 +249,12 @@ class _EditSetScreenState extends State<EditSetScreen> {
                                     'image_front': updated['image_front'],
                                   };
                                 });
-                              } catch (e) {
-                                debugPrint(
-                                  "Error loading the updated card: $e",
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Card was updated')),
                                 );
+                              } catch (e) {
+                                debugPrint("Error loading the updated card: $e");
                               }
                             }
                           },
@@ -280,6 +286,10 @@ class _EditSetScreenState extends State<EditSetScreen> {
                         'image_front': imageFront,
                       });
                     });
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Card was added')),
+                    );
                   }
                 },
                 child: Padding(
@@ -315,6 +325,8 @@ class _EditSetScreenState extends State<EditSetScreen> {
                             if (newName != _originalName) {
                               await ApiService().updateSetName(_setId, newName);
                             }
+
+
                             Navigator.pop(context, true);
                           },
                   style: ElevatedButton.styleFrom(

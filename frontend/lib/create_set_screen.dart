@@ -46,10 +46,10 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
       counter++;
     }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Failed to create set')));
-    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Failed to create set')),
+    );
+    Navigator.of(context).pop();
   }
 
   bool _isValidCustomName() {
@@ -57,43 +57,37 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
     return trimmed.isNotEmpty && !trimmed.startsWith('Untitled set');
   }
 
-  Future<void> _deleteSetAndExit() async {
+  Future<void> _deleteSet() async {
     if (_setId != null) {
       await ApiService().deleteSet(_setId!);
-    }
-    if (mounted) {
-      Navigator.pop(context, true);
     }
   }
 
   Future<bool> _onWillPop() async {
     final shouldLeave = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Discard changes?'),
-            content: const Text(
-              'You have unsaved changes. Do you really want to leave?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('No'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Yes'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text('Discard changes?'),
+        content: const Text(
+          'You have unsaved changes. Do you really want to leave?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('No'),
           ),
-    );
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Yes'),
+          ),
+        ],
+      ),
+    ) == true;
 
-    if (shouldLeave == true) {
-      await _deleteSetAndExit();
-      return true;
+    if (shouldLeave) {
+      await _deleteSet();
     }
-
-    return false;
+    return shouldLeave;
   }
 
   @override
@@ -102,19 +96,13 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
     final textColor = theme.textTheme.bodyMedium?.color;
 
     if (_loading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
-    return PopScope(
-      canPop: false,
-      onPopInvoked: (didPop) async {
-        if (!didPop) {
-          final shouldPop = await _onWillPop();
-          if (shouldPop && mounted) {
-            Navigator.pop(context);
-          }
-        }
-      },
+    return WillPopScope(
+      onWillPop: _onWillPop,
       child: Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
@@ -125,7 +113,11 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
             padding: const EdgeInsets.only(left: 20),
             child: InkWell(
               borderRadius: BorderRadius.circular(32),
-              onTap: () => _onWillPop(),
+              onTap: () async {
+                if (await _onWillPop()) {
+                  Navigator.of(context).pop(true);
+                }
+              },
               child: Icon(
                 Icons.arrow_back,
                 color: theme.iconTheme.color,
@@ -150,7 +142,7 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
                 controller: _setNameController,
                 maxLength: 16,
                 decoration: InputDecoration(
-                  labelText: 'Set name',
+                  labelText: 'Enter set name',
                   labelStyle: TextStyle(color: textColor),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(6),
@@ -163,9 +155,7 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
                 final front = (card['front'] as String?)?.trim() ?? '';
                 final imageFront = card['image_front'];
                 final displayName =
-                    front.isNotEmpty
-                        ? front
-                        : (imageFront != null ? '[image]' : '');
+                    front.isNotEmpty ? front : (imageFront != null ? '[image]' : '');
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
@@ -174,10 +164,9 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
                       color: theme.cardColor,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color:
-                            theme.brightness == Brightness.dark
-                                ? Colors.grey[700]!
-                                : Colors.grey[300]!,
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.grey[700]!
+                            : Colors.grey[300]!,
                       ),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -189,9 +178,7 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
                           child: Text(
                             displayName,
                             overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontSize: 16,
-                            ),
+                            style: theme.textTheme.bodyMedium?.copyWith(fontSize: 16),
                           ),
                         ),
                         IconButton(
@@ -205,28 +192,18 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
                                 '/editcard',
                                 arguments: flashcardId,
                               );
-
                               if (result == 'deleted') {
-                                setState(() {
-                                  cards.removeAt(entry.key);
-                                });
+                                setState(() => cards.removeAt(entry.key));
                               } else if (result == true) {
-                                try {
-                                  final updated = await ApiService()
-                                      .getFlashcardById(flashcardId);
-                                  setState(() {
-                                    cards[entry.key] = {
-                                      'flashcardId': updated['flashcard_id'],
-                                      'front': updated['front_side'] ?? '',
-                                      'back': updated['back_side'] ?? '',
-                                      'image_front': updated['image_front'],
-                                    };
-                                  });
-                                } catch (e) {
-                                  debugPrint(
-                                    'Error loading updated flashcard: $e',
-                                  );
-                                }
+                                final updated = await ApiService().getFlashcardById(flashcardId);
+                                setState(() {
+                                  cards[entry.key] = {
+                                    'flashcardId': updated['flashcard_id'],
+                                    'front': updated['front_side'] ?? '',
+                                    'back': updated['back_side'] ?? '',
+                                    'image_front': updated['image_front'],
+                                  };
+                                });
                               }
                             }
                           },
@@ -243,15 +220,18 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
                     '/newcard',
                     arguments: _setId,
                   );
-                  if (result != null && result is Map<String, dynamic>) {
+                  if (result is Map<String, dynamic>) {
                     setState(() {
                       cards.add({
                         'flashcardId': result['id'],
                         'front': result['front'],
                         'back': result['back'],
-                        'image_front': result['image_front'], // pridané
+                        'image_front': result['image_front'],
                       });
                     });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Card was added')),
+                    );
                   }
                 },
                 child: Padding(
@@ -260,12 +240,10 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.add, size: 26, color: theme.iconTheme.color),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Text(
                         'add card',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontSize: 18,
-                        ),
+                        style: theme.textTheme.bodyMedium?.copyWith(fontSize: 18),
                       ),
                     ],
                   ),
@@ -284,19 +262,15 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
                 width: double.infinity,
                 height: 54,
                 child: ElevatedButton(
-                  onPressed:
-                      (_setId == null || !_isValidCustomName())
-                          ? null
-                          : () async {
-                            final newName = _setNameController.text.trim();
-                            if (newName != _originalName) {
-                              await ApiService().updateSetName(
-                                _setId!,
-                                newName,
-                              );
-                            }
-                            Navigator.pop(context, true);
-                          },
+                  onPressed: (_setId == null || !_isValidCustomName())
+                      ? null
+                      : () async {
+                          final newName = _setNameController.text.trim();
+                          if (newName != _originalName) {
+                            await ApiService().updateSetName(_setId!, newName);
+                          }
+                          Navigator.of(context).pop(true);
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,
                     elevation: 3,

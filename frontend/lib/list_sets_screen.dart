@@ -47,7 +47,6 @@ class _ListOfSetsScreenState extends State<ListOfSetsScreen> {
         ..sort((a, b) => b.createdAt.compareTo(a.createdAt)); // tu triedenie
         await box.clear();
 
-        /* -------- načítaj všetky flashcardy paralelne -------- */
         await Future.wait(
           remoteSets.map((set) async {
             final data = await ApiService().loadSetWithFlashcards(set.setId);
@@ -130,7 +129,6 @@ class _ListOfSetsScreenState extends State<ListOfSetsScreen> {
         ),
       ),
 
-      /* ---------- BODY ---------- */
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _sets.isEmpty
@@ -206,7 +204,6 @@ class _ListOfSetsScreenState extends State<ListOfSetsScreen> {
                   },
                 ),
 
-      /* ---------- BOTTOM ---------- */
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.fromLTRB(20, 18, 20, 48),
         child: InkWell(
@@ -232,7 +229,6 @@ class _ListOfSetsScreenState extends State<ListOfSetsScreen> {
               return; // stop here
             }
 
-            
 
             final created = await Navigator.pushNamed(context, '/create');
             if (created == true) _loadSets();
