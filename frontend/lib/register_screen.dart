@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -13,15 +14,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
+  bool isNameValid = false;
+  bool isEmailValid = false;
+  bool isPasswordValid = false;
+
+  final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+  final nameRegex = RegExp(r'^[a-zA-Zá-žÁ-Ž\s]{2,}$');
+
   void handleRegister() async {
     final name = nameController.text.trim();
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
-    if (name.isEmpty || email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Vyplň všetky polia')));
+    if (!isNameValid || !isEmailValid || !isPasswordValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter all data correctly !')),
+      );
       return;
     }
 
@@ -29,21 +37,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final success = await api.register(name, email, password);
 
     if (success) {
+      FirebaseAnalytics.instance.logEvent(name: 'register_success');
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Registrácia úspešná')));
+      ).showSnackBar(const SnackBar(content: Text('Registration Succesful')));
       Navigator.pushNamed(context, '/login');
     } else {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Registrácia zlyhala')));
+      ).showSnackBar(const SnackBar(content: Text('Registration Failed')));
     }
+  }
+
+  Widget _buildValidatedField({
+    required String label,
+    required TextEditingController controller,
+    required bool isValid,
+    required void Function(String) onChanged,
+    bool obscureText = false,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscureText,
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+        suffixIcon: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: Icon(
+            isValid ? Icons.check_circle : Icons.cancel,
+            key: ValueKey<bool>(isValid),
+            color: isValid ? Colors.green : Colors.red,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context); // 💡 Získaj aktuálnu tému
-    final textColor = theme.textTheme.bodyMedium?.color ?? Colors.black;
+    final theme = Theme.of(context);
 
     return Scaffold(
       backgroundColor: theme.colorScheme.background,
@@ -55,29 +89,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: [
               const Icon(Icons.person_add, size: 96),
               const SizedBox(height: 32),
-              TextField(
+              _buildValidatedField(
+                label: 'Name',
                 controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Meno',
-                  border: OutlineInputBorder(),
-                ),
+                isValid: isNameValid,
+                onChanged: (value) {
+                  setState(() {
+                    isNameValid = nameRegex.hasMatch(value.trim());
+                  });
+                },
               ),
               const SizedBox(height: 16),
-              TextField(
+              _buildValidatedField(
+                label: 'Email',
                 controller: emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                ),
+                isValid: isEmailValid,
+                onChanged: (value) {
+                  setState(() {
+                    isEmailValid = emailRegex.hasMatch(value.trim());
+                  });
+                },
               ),
               const SizedBox(height: 16),
-              TextField(
+              _buildValidatedField(
+                label: 'Password',
                 controller: passwordController,
+                isValid: isPasswordValid,
                 obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Heslo',
-                  border: OutlineInputBorder(),
-                ),
+                onChanged: (value) {
+                  setState(() {
+                    isPasswordValid = value.trim().length >= 6;
+                  });
+                },
               ),
               const SizedBox(height: 32),
               ElevatedButton(
@@ -88,7 +131,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 onPressed: () {
                   Navigator.pushNamed(context, '/login');
                 },
-                child: const Text('Máte účet? Prihlásiť sa'),
+                child: const Text('Do you have an Account ? --> Login'),
               ),
             ],
           ),

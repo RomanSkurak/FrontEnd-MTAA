@@ -23,7 +23,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Vyplň všetky polia')));
+      ).showSnackBar(const SnackBar(content: Text('Fill in all fields')));
       return;
     }
 
@@ -51,11 +51,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Úspešné prihlásenie')));
+      ).showSnackBar(const SnackBar(content: Text('Successful Login')));
     } else {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Prihlásenie zlyhalo')));
+      ).showSnackBar(const SnackBar(content: Text('Login Failed')));
     }
   }
 
@@ -99,22 +99,23 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: () {
                   Navigator.pushNamed(context, '/register');
                 },
-                child: const Text('Nemáš účet? Registrovať sa'),
+                child: const Text('Dont you have an account? --> Register'),
               ),
               OutlinedButton(
                 onPressed: () async {
                   final response = await ApiService().guestLogin();
                   if (response) {
+                    FirebaseAnalytics.instance.logEvent(name: 'guest_login');
                     Navigator.pushReplacementNamed(context, '/guest');
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Nepodarilo sa prihlásiť ako hosť'),
+                        content: Text('Failed to log in as a Guest'),
                       ),
                     );
                   }
                 },
-                child: const Text('Pokračovať ako hosť'),
+                child: const Text('Continue as Guest'),
               ),
             ],
           ),

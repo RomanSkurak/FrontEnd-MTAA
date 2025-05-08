@@ -52,8 +52,8 @@ void callbackDispatcher() {
 
     await flutterLocalNotificationsPlugin.show(
       0,
-      '📚 Nezabudni na učenie!',
-      'Poď si zopakovať svoje flashcards!',
+      '📚 Dont forget to Study!',
+      'Come and review your flashcards!',
       notificationDetails,
     );
 

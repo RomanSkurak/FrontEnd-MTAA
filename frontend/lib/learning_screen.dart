@@ -6,6 +6,8 @@ import 'api_service.dart';
 import 'package:hive/hive.dart';
 import 'offline_models.dart';
 import 'connectivity_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 class _Flashcard {
   final String frontText;
@@ -43,11 +45,13 @@ class _LearningScreenState extends State<LearningScreen>
   int _currentIndex = 0;
   bool _isFrontSide = true;
   bool _isLoading = true;
+  late bool _isGuest;
 
   @override
   void initState() {
     super.initState();
     // začiatok sedenia
+    FirebaseAnalytics.instance.logEvent(name: 'learning_started');
     _sessionStart = DateTime.now();
 
     _controller = AnimationController(
@@ -55,7 +59,14 @@ class _LearningScreenState extends State<LearningScreen>
       duration: const Duration(milliseconds: 400),
     );
     _animation = Tween<double>(begin: 0, end: pi).animate(_controller);
-    _loadCards();
+
+    _initGuestStatus().then((_) => _loadCards());
+  }
+
+  Future<void> _initGuestStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final role = prefs.getString('role');
+    _isGuest = role != 'user' && role != 'admin';
   }
 
   Uint8List? _decode(String? base64) {
@@ -64,14 +75,28 @@ class _LearningScreenState extends State<LearningScreen>
     return base64Decode(cleaned);
   }
 
-  
+  Future<bool> isGuestUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final role = prefs.getString('role');
+    return role != 'user' && role != 'admin';
+  }
+
   Future<void> _loadCards() async {
     final isOnline = await ConnectivityService.isOnline();
 
     if (isOnline) {
       try {
-        final data = await ApiService().loadSetWithFlashcards(widget.setId);
-        final raw = data['cards'] as List<dynamic>;
+        final isGuest = await isGuestUser(); // napr. z SharedPreferences
+        List<dynamic> raw;
+
+        if (isGuest) {
+          raw = await ApiService().getPublicFlashcardsBySet(widget.setId);
+        } else {
+          final data = await ApiService().loadSetWithFlashcards(widget.setId);
+          raw = data['cards'] as List<dynamic>;
+        }
+
+        //final raw = data['cards'] as List<dynamic>;
 
         if (raw.isEmpty && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -95,9 +120,9 @@ class _LearningScreenState extends State<LearningScreen>
         setState(() => _isLoading = false);
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to load cards: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to load cards: $e')));
           Navigator.pop(context);
         }
       }
@@ -105,15 +130,16 @@ class _LearningScreenState extends State<LearningScreen>
       final box = Hive.box<OfflineFlashcardSet>('offlineSets');
       final offlineSet = box.values.firstWhere(
         (s) => s.setId == widget.setId,
-        orElse: () => OfflineFlashcardSet(
-          setId: 0,
-          name: '',
-          isPublic: false,
-          userId: 0,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-          flashcards: [],
-        ),
+        orElse:
+            () => OfflineFlashcardSet(
+              setId: 0,
+              name: '',
+              isPublic: false,
+              userId: 0,
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+              flashcards: [],
+            ),
       );
 
       if (offlineSet.flashcards.isEmpty) {
@@ -162,6 +188,7 @@ class _LearningScreenState extends State<LearningScreen>
   }
 
   Future<void> _submitSession() async {
+    if (_isGuest) return; // 🛑 Guest neodosiela nič
     final endTime = DateTime.now();
     try {
       await ApiService().submitLearningSession(

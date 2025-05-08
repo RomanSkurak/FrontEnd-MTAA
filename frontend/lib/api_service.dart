@@ -142,6 +142,18 @@ class ApiService {
     }
   }
 
+  //get public flashcards
+  Future<List<dynamic>> getPublicFlashcardsBySet(int setId) async {
+    final uri = Uri.parse('$baseUrl/public-flashcards/$setId');
+    final res = await http.get(uri);
+
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body);
+    } else {
+      throw Exception('Nepodarilo sa načítať verejné flashcards');
+    }
+  }
+
   // POST public set
   Future<bool> createPublicSet(String name) async {
     final token = await getToken();

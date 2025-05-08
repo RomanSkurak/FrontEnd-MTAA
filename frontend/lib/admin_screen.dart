@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
+import 'models.dart';
 
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
@@ -10,7 +11,7 @@ class AdminScreen extends StatefulWidget {
 
 class _AdminScreenState extends State<AdminScreen> {
   final TextEditingController _setNameController = TextEditingController();
-  List<dynamic> publicSets = [];
+  List<FlashcardSet> publicSets = [];
 
   Future<void> createPublicSet() async {
     final name = _setNameController.text.trim();
@@ -42,10 +43,12 @@ class _AdminScreenState extends State<AdminScreen> {
   }
 
   Future<void> fetchPublicSets() async {
-    final sets = await ApiService().getPublicSets();
-    setState(() {
-      publicSets = sets;
-    });
+    final rawSets = await ApiService().getPublicSets();
+    final sets =
+        rawSets
+            .map<FlashcardSet>((json) => FlashcardSet.fromJson(json))
+            .toList();
+    setState(() => publicSets = sets);
   }
 
   @override
@@ -57,7 +60,6 @@ class _AdminScreenState extends State<AdminScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final textColor = theme.textTheme.bodyMedium?.color ?? Colors.black;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -111,8 +113,19 @@ class _AdminScreenState extends State<AdminScreen> {
                 itemBuilder: (context, index) {
                   final set = publicSets[index];
                   return ListTile(
-                    title: Text(set['name']),
-                    subtitle: Text('Set ID: ${set['set_id']}'),
+                    title: Text(set.name),
+                    subtitle: Text('Set ID: ${set.setId}'),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () async {
+                        final result = await Navigator.pushNamed(
+                          context,
+                          '/editset',
+                          arguments: set,
+                        );
+                        if (result == true) fetchPublicSets();
+                      },
+                    ),
                   );
                 },
               ),

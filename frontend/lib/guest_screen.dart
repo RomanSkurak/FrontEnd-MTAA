@@ -26,7 +26,7 @@ class _GuestScreenState extends State<GuestScreen> {
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Chyba pri načítaní setov: $e')));
+      ).showSnackBar(SnackBar(content: Text('Error with loading Sets: $e')));
     }
   }
 
@@ -64,12 +64,12 @@ class _GuestScreenState extends State<GuestScreen> {
                   backgroundColor: theme.colorScheme.secondaryContainer,
                   foregroundColor: theme.colorScheme.onSecondaryContainer,
                 ),
-                child: const Text('Zobraziť public sety'),
+                child: const Text('Refresh public sets'),
               ),
             ),
             const SizedBox(height: 16),
             const Text(
-              'Dostupné verejné sety:',
+              'Available public sets:',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 12),
@@ -77,7 +77,7 @@ class _GuestScreenState extends State<GuestScreen> {
             Expanded(
               child:
                   publicSets.isEmpty
-                      ? const Center(child: Text('Žiadne sety k dispozícii'))
+                      ? const Center(child: Text('No Sets Available'))
                       : ListView.builder(
                         itemCount: publicSets.length,
                         itemBuilder: (context, index) {
@@ -85,6 +85,14 @@ class _GuestScreenState extends State<GuestScreen> {
                           return ListTile(
                             title: Text(set['name']),
                             subtitle: Text('Set ID: ${set['set_id']}'),
+                            trailing: const Icon(Icons.arrow_forward_ios),
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                '/learn',
+                                arguments: set['set_id'],
+                              );
+                            },
                           );
                         },
                       ),

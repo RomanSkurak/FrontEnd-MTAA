@@ -44,7 +44,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     if (_error != null) {
-      return Scaffold(body: Center(child: Text('Chyba: $_error')));
+      return Scaffold(body: Center(child: Text('Error: $_error')));
     }
 
     // pre jednoduchosť predpokladáme, že BE vrátil:
@@ -71,7 +71,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          'Štatistiky',
+          'Statistics',
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -106,10 +106,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 '${totalHours.toStringAsFixed(1)} h',
                 textStyle,
               ),
-              _buildStatRow('🏆 Best Streak', '$bestStreak dní', textStyle),
+              _buildStatRow('🏆 Best Streak', '$bestStreak days', textStyle),
               _buildStatRow(
                 '🔥 Current Streak',
-                '$currentStreak dní',
+                '$currentStreak days',
                 textStyle,
               ),
             ],
