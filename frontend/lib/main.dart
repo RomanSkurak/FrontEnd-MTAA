@@ -120,6 +120,16 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+
+  bool _isLargeText = false;
+
+  bool get isLargeText => _isLargeText;
+
+  void setLargeText(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() => _isLargeText = value);
+    prefs.setBool('largeText', value);
+  }
   ThemeMode _themeMode = ThemeMode.system;
 
   void setTheme(ThemeMode mode) async {
@@ -131,6 +141,8 @@ class _MyAppState extends State<MyApp> {
   Future<void> loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
     final savedTheme = prefs.getString('themeMode');
+
+    _isLargeText = prefs.getBool('largeText') ?? false;
 
     setState(() {
       if (savedTheme == 'dark') {

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'dart:math';
 import 'api_service.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'main.dart';
 
 
 class NewCardScreen extends StatelessWidget {
@@ -77,6 +78,7 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
       context: context,
       barrierDismissible: false,
       builder: (context) {
+        final isLargeText = MyApp.of(context)?.isLargeText ?? false;
         final theme = Theme.of(context);
         return Center(
           child: Material(
@@ -99,7 +101,9 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
                       expands: true,
                       textAlign: TextAlign.center,
                       textAlignVertical: TextAlignVertical.center,
-                      style: theme.textTheme.bodyLarge,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontSize: isLargeText ? 25 : 18,
+                      ),
                       decoration: const InputDecoration(
                         isCollapsed: true,
                         contentPadding: EdgeInsets.zero,
@@ -108,7 +112,7 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -118,7 +122,10 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
                           backgroundColor: Colors.grey[200],
                           foregroundColor: Colors.black,
                         ),
-                        child: const Text('Cancel'),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(fontSize: isLargeText ? 20 : 14),
+                        ),
                       ),
                       ElevatedButton(
                         onPressed:
@@ -128,7 +135,10 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
                           backgroundColor: Colors.black,
                           foregroundColor: Colors.white,
                         ),
-                        child: const Text('OK'),
+                        child: Text(
+                          'OK',
+                          style: TextStyle(fontSize: isLargeText ? 20 : 14),
+                        ),
                       ),
                     ],
                   ),
@@ -160,8 +170,8 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
 
     setState(() => isPickingImage = true);
 
-    final status = await Permission.photos.request(); // iOS
-    final androidStatus = await Permission.storage.request(); // Android
+    final status = await Permission.photos.request(); 
+    final androidStatus = await Permission.storage.request(); 
 
     if (!status.isGranted && !androidStatus.isGranted) {
       setState(() => isPickingImage = false);
@@ -198,8 +208,9 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final textColor = theme.textTheme.bodyMedium?.color ?? Colors.black;
-    final frontCardColor = isDark ? Colors.grey[850]! : const Color(0xFFE1E1E1);
-    final backCardColor = isDark ? Colors.grey[700]! : const Color(0xFFC1C1C1);
+    final frontCardColor = isDark ? Colors.grey[800] : const Color(0xFFE1E1E1);
+    final backCardColor = isDark ? Colors.grey[700] : const Color(0xFFC1C1C1);
+    final isLargeText = MyApp.of(context)?.isLargeText ?? false;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -221,7 +232,9 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
         ),
         title: Text(
           isFrontSide ? 'Front side' : 'Back side',
-          style: theme.textTheme.titleLarge,
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontSize: isLargeText ? 30 : 20,
+          ),
         ),
       ),
       body: Padding(
@@ -245,14 +258,14 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
                                 : Text(
                                   backText,
                                   textAlign: TextAlign.center,
-                                  style: theme.textTheme.bodyLarge,
+                                  style: theme.textTheme.bodyLarge?.copyWith(fontSize: isLargeText ? 25 : 18),
                                 ))
                             : (frontImage != null
                                 ? Image.memory(frontImage!, fit: BoxFit.contain)
                                 : Text(
                                   frontText,
                                   textAlign: TextAlign.center,
-                                  style: theme.textTheme.bodyLarge,
+                                  style: theme.textTheme.bodyLarge?.copyWith(fontSize: isLargeText ? 25 : 18),
                                 ));
 
                     return Transform(
@@ -289,10 +302,10 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
                               bottom: 12,
                               child: GestureDetector(
                                 onTap: _flipCard,
-                                child: const Icon(
+                                child: Icon(
                                   Icons.sync,
                                   size: 28,
-                                  color: Colors.black54,
+                                  color: isDark ? Colors.white : Colors.black54,
                                 ),
                               ),
                             ),
@@ -311,18 +324,26 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
                 ElevatedButton(
                   onPressed: _editText,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[200],
-                    foregroundColor: Colors.black,
+                    backgroundColor:
+                          isDark ? Colors.grey[800] : Colors.grey[200],
+                    foregroundColor: textColor,
                   ),
-                  child: const Text('Change text'),
+                  child: Text(
+                    'Change text',
+                    style: TextStyle(fontSize: isLargeText ? 19 : 15),
+                  ),
                 ),
                 ElevatedButton(
                   onPressed: _pickImage,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[200],
-                    foregroundColor: Colors.black,
+                    backgroundColor:
+                          isDark ? Colors.grey[800] : Colors.grey[200],
+                    foregroundColor: textColor,
                   ),
-                  child: const Text('Change image'),
+                  child: Text(
+                    'Change image',
+                    style: TextStyle(fontSize: isLargeText ? 19 : 15),
+                  ),
                 ),
               ],
             ),
@@ -378,17 +399,17 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
+                child: Text(
                   'Update card',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
+                  style: TextStyle(fontSize: isLargeText ? 24 : 16, color: Colors.white),
                 ),
               ),
             ),
             const SizedBox(height: 8),
             if (!_isCardFilled())
-              const Text(
+              Text(
                 'You must fill both sides of the card',
-                style: TextStyle(color: Colors.redAccent, fontSize: 14),
+                style: TextStyle(color: Colors.redAccent, fontSize: isLargeText ? 18 : 14),
               ),
           ],
         ),

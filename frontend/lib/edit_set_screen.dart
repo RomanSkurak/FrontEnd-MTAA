@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
 import 'models.dart';
+import 'main.dart';
 
 class EditSetScreen extends StatefulWidget {
   final FlashcardSet flashcardSet;
@@ -70,25 +71,39 @@ class _EditSetScreenState extends State<EditSetScreen> {
   }
 
   Future<void> _confirmAndDeleteSet() async {
+    final isLargeText = MyApp.of(context)?.isLargeText ?? false;
+
     final shouldDelete = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Delete set?'),
-            content: const Text(
-              'Are you sure you want to delete this set? This action cannot be undone.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Delete'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Delete set?',
+          style: TextStyle(
+            fontSize: isLargeText ? 24 : 20,
+            fontWeight: FontWeight.bold,
           ),
+        ),
+        content: Text(
+          'Are you sure you want to delete this set? This action cannot be undone.',
+          style: TextStyle(fontSize: isLargeText ? 20 : 16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(
+              'Cancel',
+              style: TextStyle(fontSize: isLargeText ? 20 : 16),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(
+              'Delete',
+              style: TextStyle(fontSize: isLargeText ? 20 : 16),
+            ),
+          ),
+        ],
+      ),
     );
 
     if (shouldDelete == true) {
@@ -96,37 +111,49 @@ class _EditSetScreenState extends State<EditSetScreen> {
       if (success) {
         Navigator.pop(context, true);
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Failed to delete set')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to delete set')),
+        );
       }
     }
   }
 
   Future<bool> _onWillPop() async {
-    if (!_hasUnsavedChanges()) {
-      return true;
-    }
+    if (!_hasUnsavedChanges()) return true;
+
+    final isLargeText = MyApp.of(context)?.isLargeText ?? false;
 
     final shouldDiscard = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Discard name change?'),
-            content: const Text(
-              'You have unsaved changes to the set name. Do you want to leave without saving the new name?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('No'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Yes'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Discard name change?',
+          style: TextStyle(
+            fontSize: isLargeText ? 24 : 20,
+            fontWeight: FontWeight.bold,
           ),
+        ),
+        content: Text(
+          'You have unsaved changes to the set name. Do you want to leave without saving the new name?',
+          style: TextStyle(fontSize: isLargeText ? 20 : 16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(
+              'No',
+              style: TextStyle(fontSize: isLargeText ? 20 : 16),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(
+              'Yes',
+              style: TextStyle(fontSize: isLargeText ? 20 : 16),
+            ),
+          ),
+        ],
+      ),
     );
 
     return (shouldDiscard == true);
@@ -139,6 +166,7 @@ class _EditSetScreenState extends State<EditSetScreen> {
     final bgColor = theme.scaffoldBackgroundColor;
     final cardColor = isDark ? Colors.grey[800] : Colors.grey[200];
     final textColor = theme.textTheme.bodyLarge?.color ?? Colors.black;
+    final isLargeText = MyApp.of(context)?.isLargeText ?? false;
 
     if (_loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -172,7 +200,8 @@ class _EditSetScreenState extends State<EditSetScreen> {
           title: Text(
             'Edit set',
             style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w500,
+              fontWeight: isLargeText ? FontWeight.bold : FontWeight.w500,
+              fontSize: isLargeText ? 34 : null,
             ),
           ),
         ),
@@ -185,12 +214,30 @@ class _EditSetScreenState extends State<EditSetScreen> {
               TextField(
                 controller: _setNameController,
                 maxLength: 16,
+                style: TextStyle(
+                  fontSize: isLargeText ? 24 : null,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Set name',
+                  labelStyle: TextStyle(color: textColor, fontSize: isLargeText ? 23 : null),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(6),
                   ),
                 ),
+                buildCounter: (
+                  BuildContext context, {
+                  required int currentLength,
+                  required bool isFocused,
+                  required int? maxLength,
+                }) {
+                  return Text(
+                    '$currentLength/$maxLength',
+                    style: TextStyle(
+                      fontSize: isLargeText ? 18 : null,
+                      color: theme.hintColor,
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 20),
               ...cards.asMap().entries.map((entry) {
@@ -210,7 +257,7 @@ class _EditSetScreenState extends State<EditSetScreen> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    height: 56,
+                    height: isLargeText ? 66 : 56,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -218,11 +265,11 @@ class _EditSetScreenState extends State<EditSetScreen> {
                           child: Text(
                             displayName,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 16, color: textColor),
+                            style: TextStyle(fontSize: isLargeText ? 22 : 16, color: textColor),
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.edit, size: 22),
+                          icon: Icon(Icons.edit, size: isLargeText ? 28 : 22),
                           color: theme.iconTheme.color,
                           onPressed: () async {
                             final result = await Navigator.pushNamed(
@@ -297,11 +344,11 @@ class _EditSetScreenState extends State<EditSetScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.add, size: 26, color: theme.iconTheme.color),
+                      Icon(Icons.add, size: isLargeText ? 36 : 26, color: theme.iconTheme.color),
                       SizedBox(width: 8),
                       Text(
-                        'Add card',
-                        style: TextStyle(fontSize: 18, color: textColor),
+                        'add card',
+                        style: TextStyle(fontSize: isLargeText ? 25 : 18, color: textColor),
                       ),
                     ],
                   ),
@@ -330,17 +377,17 @@ class _EditSetScreenState extends State<EditSetScreen> {
                             Navigator.pop(context, true);
                           },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primary,
+                    backgroundColor: Colors.green,
                     elevation: 3,
                     minimumSize: const Size.fromHeight(50),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Update set',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: isLargeText ? 22 : 16,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),
@@ -361,10 +408,10 @@ class _EditSetScreenState extends State<EditSetScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Delete set',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: isLargeText ? 22 : 16,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-
+import 'main.dart';
 import 'api_service.dart';
 import 'connectivity_service.dart';
 import 'models.dart';
@@ -44,7 +44,7 @@ class _ListOfSetsScreenState extends State<ListOfSetsScreen> {
       try {
         debugPrint('🌐 Online – sťahujem zo servera');
         final remoteSets = await ApiService().fetchSets()
-        ..sort((a, b) => b.createdAt.compareTo(a.createdAt)); // tu triedenie
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt)); 
         await box.clear();
 
         await Future.wait(
@@ -78,7 +78,6 @@ class _ListOfSetsScreenState extends State<ListOfSetsScreen> {
         setState(() => _sets = remoteSets);
       } catch (e) {
         debugPrint('❌  Chyba pri sťahovaní: $e');
-        /* ––– fallback na Hive, ak by server zlyhal ––– */
         _loadFromHive(box);
       }
     } else {
@@ -108,7 +107,7 @@ class _ListOfSetsScreenState extends State<ListOfSetsScreen> {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context);
-
+    final isLargeText = MyApp.of(context)?.isLargeText ?? false;
     return Scaffold(
       backgroundColor: t.scaffoldBackgroundColor,
       appBar: AppBar(
@@ -125,7 +124,8 @@ class _ListOfSetsScreenState extends State<ListOfSetsScreen> {
         ),
         title: Text(
           'List of your sets',
-          style: t.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+          style: t.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold,
+          fontSize: isLargeText ? 30 : null),
         ),
       ),
 
@@ -135,7 +135,8 @@ class _ListOfSetsScreenState extends State<ListOfSetsScreen> {
               ? Center(
                   child: Text(
                     "You don't have any flashcard sets yet",
-                    style: t.textTheme.bodyMedium?.copyWith(color: t.hintColor),
+                    style: t.textTheme.bodyMedium?.copyWith(color: t.hintColor,
+                    fontSize: isLargeText ? 25 : null),
                   ),
                 )
               : ListView.builder(
@@ -161,14 +162,15 @@ class _ListOfSetsScreenState extends State<ListOfSetsScreen> {
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: SizedBox(
-                              height: 64,
+                              height: isLargeText ? 80 : 64,
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(set.name,
-                                      style: t.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500)),
+                                      style: t.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500,
+                                      fontSize: isLargeText ? 28 : null)),
                                   IconButton(
-                                    icon: const Icon(Icons.edit, size: 25),
+                                    icon: Icon(Icons.edit, size: isLargeText ? 30 : 25),
                                     color: t.iconTheme.color,
                                     onPressed: () async {
                                       final online = await ConnectivityService.isOnline();
@@ -176,16 +178,28 @@ class _ListOfSetsScreenState extends State<ListOfSetsScreen> {
                                         if (mounted) {
                                           await showDialog(
                                             context: context,
-                                            builder: (ctx) => AlertDialog(
-                                              title: const Text('Error'),
-                                              content: const Text('You are offline – editing is available only online.'),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () => Navigator.of(ctx).pop(),
-                                                  child: const Text('OK'),
+                                            builder: (ctx) {
+                                              final isLargeText = MyApp.of(context)?.isLargeText ?? false;
+                                              return AlertDialog(
+                                                title: Text(
+                                                  'Offline',
+                                                  style: TextStyle(fontSize: isLargeText ? 32 : 22, fontWeight: FontWeight.bold),
                                                 ),
-                                              ],
-                                            ),
+                                                content: Text(
+                                                  'You are offline – editing is available only online',
+                                                  style: TextStyle(fontSize: isLargeText ? 28 : 18),
+                                                ),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () => Navigator.of(ctx).pop(),
+                                                    child: Text(
+                                                      'OK',
+                                                      style: TextStyle(fontSize: isLargeText ? 30 : 20),
+                                                    ),
+                                                  ),
+                                                ],
+                                              );
+                                            },
                                           );
                                         }
                                         return; 
@@ -214,19 +228,31 @@ class _ListOfSetsScreenState extends State<ListOfSetsScreen> {
               if (mounted) {
                 await showDialog(
                   context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: const Text('Error'),
-                    content: const Text('You are offline – creating a set requires connection.'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(ctx).pop(),
-                        child: const Text('OK'),
+                  builder: (ctx) {
+                    final isLargeText = MyApp.of(context)?.isLargeText ?? false;
+                    return AlertDialog(
+                      title: Text(
+                        'Offline',
+                        style: TextStyle(fontSize: isLargeText ? 32 : 22, fontWeight: FontWeight.bold),
                       ),
-                    ],
-                  ),
+                      content: Text(
+                        'You are offline – creating a set requires connection',
+                        style: TextStyle(fontSize: isLargeText ? 28 : 18),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          child: Text(
+                            'OK',
+                            style: TextStyle(fontSize: isLargeText ? 30 : 20),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 );
               }
-              return; // stop here
+              return;
             }
 
 
@@ -237,16 +263,19 @@ class _ListOfSetsScreenState extends State<ListOfSetsScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 42,
-                height: 42,
+                 width: isLargeText ? 62 : 42,
+                height: isLargeText ? 62 : 42,  
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(color: t.iconTheme.color ?? Colors.black),
                 ),
-                child: Icon(Icons.add, color: t.iconTheme.color),
+                child: Icon(Icons.add, size: isLargeText ? 30 : 24, color: t.iconTheme.color),
               ),
               const SizedBox(width: 10),
-              Text('Create a New Set', style: t.textTheme.titleMedium),
+              Text(
+                'Create a New Set',
+                style: t.textTheme.titleMedium?.copyWith(fontSize: isLargeText ? 24 : null),
+              ),
             ],
           ),
         ),

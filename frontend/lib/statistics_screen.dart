@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'api_service.dart';
+import 'main.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -37,8 +38,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isLargeText = MyApp.of(context)?.isLargeText ?? false;
     final theme = Theme.of(context);
-    final textStyle = theme.textTheme.bodyLarge?.copyWith(fontSize: 18);
+    final textStyle = theme.textTheme.bodyLarge?.copyWith(fontSize: isLargeText ? 22 : 18);
 
     if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -73,10 +75,19 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         title: Text(
           'Statistics',
           style: theme.textTheme.titleLarge?.copyWith(
+            fontSize: isLargeText ? 32 : 25,
             fontWeight: FontWeight.bold,
           ),
         ),
         centerTitle: true,
+         leading: Padding(
+          padding: const EdgeInsets.only(left: 12), 
+          child: IconButton(
+            icon: Icon(Icons.arrow_back, size: isLargeText ? 40 : 30), 
+            onPressed: () => Navigator.pop(context),
+            tooltip: 'Back',
+          ),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),

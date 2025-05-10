@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'api_service.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'main.dart';
 
 class EditCardScreen extends StatefulWidget {
   final int flashcardId;
@@ -117,30 +118,44 @@ class _EditCardScreenState extends State<EditCardScreen>
   }
 
   Future<bool> _confirmDiscardChanges() async {
+    final isLargeText = MyApp.of(context)?.isLargeText ?? false;
+
     final shouldDiscard = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Discard changes?'),
-            content: const Text(
-              'You have unsaved changes. Do you want to leave without saving?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('No'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Yes'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Discard changes?',
+          style: TextStyle(
+            fontSize: isLargeText ? 24 : 20,
+            fontWeight: FontWeight.bold,
           ),
+        ),
+        content: Text(
+          'You have unsaved changes. Do you want to leave without saving?',
+          style: TextStyle(fontSize: isLargeText ? 20 : 16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(
+              'No',
+              style: TextStyle(fontSize: isLargeText ? 20 : 16),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(
+              'Yes',
+              style: TextStyle(fontSize: isLargeText ? 20 : 16),
+            ),
+          ),
+        ],
+      ),
     );
 
     return (shouldDiscard == true);
   }
-
+  
   Future<bool> _onWillPop() async {
     if (!_hasUnsavedChanges()) return true;
 
@@ -166,6 +181,8 @@ class _EditCardScreenState extends State<EditCardScreen>
       context: context,
       barrierDismissible: false,
       builder: (context) {
+        final isLargeText = MyApp.of(context)?.isLargeText ?? false;
+        final theme = Theme.of(context);
         return Center(
           child: Material(
             color: Colors.transparent,
@@ -173,7 +190,7 @@ class _EditCardScreenState extends State<EditCardScreen>
               width: 360,
               height: 540,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: theme.cardColor,
                 borderRadius: BorderRadius.circular(16),
               ),
               padding: const EdgeInsets.fromLTRB(15, 15, 15, 8),
@@ -187,7 +204,9 @@ class _EditCardScreenState extends State<EditCardScreen>
                       expands: true,
                       textAlign: TextAlign.center,
                       textAlignVertical: TextAlignVertical.center,
-                      style: const TextStyle(fontSize: 18),
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontSize: isLargeText ? 25 : 18,
+                      ),
                       decoration: const InputDecoration(
                         isCollapsed: true,
                         contentPadding: EdgeInsets.zero,
@@ -206,7 +225,10 @@ class _EditCardScreenState extends State<EditCardScreen>
                           backgroundColor: Colors.grey[200],
                           foregroundColor: Colors.black,
                         ),
-                        child: const Text('Cancel'),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(fontSize: isLargeText ? 20 : 14),
+                        ),
                       ),
                       ElevatedButton(
                         onPressed:
@@ -216,7 +238,10 @@ class _EditCardScreenState extends State<EditCardScreen>
                           backgroundColor: Colors.black,
                           foregroundColor: Colors.white,
                         ),
-                        child: const Text('OK'),
+                        child: Text(
+                          'OK',
+                          style: TextStyle(fontSize: isLargeText ? 20 : 14),
+                        )
                       ),
                     ],
                   ),
@@ -248,8 +273,8 @@ class _EditCardScreenState extends State<EditCardScreen>
 
     setState(() => isPickingImage = true);
 
-    final status = await Permission.photos.request(); // iOS
-    final androidStatus = await Permission.storage.request(); // Android
+    final status = await Permission.photos.request(); 
+    final androidStatus = await Permission.storage.request(); 
 
     if (!status.isGranted && !androidStatus.isGranted) {
       setState(() => isPickingImage = false);
@@ -318,6 +343,7 @@ class _EditCardScreenState extends State<EditCardScreen>
     final cardFrontColor = isDark ? Colors.grey[800] : const Color(0xFFE1E1E1);
     final cardBackColor = isDark ? Colors.grey[700] : const Color(0xFFC1C1C1);
     final textColor = theme.textTheme.bodyLarge?.color ?? Colors.black;
+    final isLargeText = MyApp.of(context)?.isLargeText ?? false;
 
     return WillPopScope(
       onWillPop: _onWillPop,
@@ -345,9 +371,11 @@ class _EditCardScreenState extends State<EditCardScreen>
             ),
           ),
           title: Text(
-            isFrontSide ? 'Front side' : 'Back side',
-            style: theme.textTheme.titleMedium,
+          isFrontSide ? 'Front side' : 'Back side',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontSize: isLargeText ? 30 : 20,
           ),
+        ),
         ),
         body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -373,10 +401,7 @@ class _EditCardScreenState extends State<EditCardScreen>
                                   : Text(
                                     backText,
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      color: textColor,
-                                    ),
+                                    style: theme.textTheme.bodyLarge?.copyWith(fontSize: isLargeText ? 25 : 18),
                                   ))
                               : (frontImage != null
                                   ? Image.memory(
@@ -386,10 +411,7 @@ class _EditCardScreenState extends State<EditCardScreen>
                                   : Text(
                                     frontText,
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      color: textColor,
-                                    ),
+                                    style: theme.textTheme.bodyLarge?.copyWith(fontSize: isLargeText ? 25 : 18),
                                   ));
 
                       return Transform(
@@ -429,7 +451,7 @@ class _EditCardScreenState extends State<EditCardScreen>
                                   child: Icon(
                                     Icons.sync,
                                     size: 28,
-                                    color: textColor.withOpacity(0.5),
+                                    color: isDark ? Colors.white : Colors.black54,
                                   ),
                                 ),
                               ),
@@ -452,7 +474,10 @@ class _EditCardScreenState extends State<EditCardScreen>
                           isDark ? Colors.grey[800] : Colors.grey[200],
                       foregroundColor: textColor,
                     ),
-                    child: const Text('Change text'),
+                    child: Text(
+                    'Change text',
+                    style: TextStyle(fontSize: isLargeText ? 19 : 15),
+                  ),
                   ),
                   ElevatedButton(
                     onPressed: _pickImage,
@@ -461,7 +486,10 @@ class _EditCardScreenState extends State<EditCardScreen>
                           isDark ? Colors.grey[800] : Colors.grey[200],
                       foregroundColor: textColor,
                     ),
-                    child: const Text('Change image'),
+                    child: Text(
+                    'Change image',
+                    style: TextStyle(fontSize: isLargeText ? 19 : 15),
+                  ),
                   ),
                 ],
               ),
@@ -506,7 +534,7 @@ class _EditCardScreenState extends State<EditCardScreen>
                           }
                           : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primary,
+                    backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
                     minimumSize: const Size.fromHeight(50),
                     elevation: 3,
@@ -514,7 +542,10 @@ class _EditCardScreenState extends State<EditCardScreen>
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text('Update card'),
+                  child: Text(
+                    'Update card',
+                    style: TextStyle(fontSize: isLargeText ? 20 : 16, color: Colors.white),
+                  ),
                 ),
               ),
               const SizedBox(width: 28),
@@ -530,9 +561,9 @@ class _EditCardScreenState extends State<EditCardScreen>
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Delete card',
-                    style: TextStyle(fontSize: 16, color: Colors.white),
+                    style: TextStyle(fontSize: isLargeText ? 20 : 16, color: Colors.white),
                   ),
                 ),
               ),

@@ -8,6 +8,7 @@ import 'offline_models.dart';
 import 'connectivity_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'main.dart';
 
 class _Flashcard {
   final String frontText;
@@ -86,7 +87,7 @@ class _LearningScreenState extends State<LearningScreen>
 
     if (isOnline) {
       try {
-        final isGuest = await isGuestUser(); // napr. z SharedPreferences
+        final isGuest = await isGuestUser(); 
         List<dynamic> raw;
 
         if (isGuest) {
@@ -237,9 +238,10 @@ class _LearningScreenState extends State<LearningScreen>
   }
 
   Widget _buildContent(bool isBack) {
+    final isLargeText = MyApp.of(context)?.isLargeText ?? false;
     final c = _cards[_currentIndex];
     final theme = Theme.of(context);
-    final textStyle = theme.textTheme.bodyLarge?.copyWith(fontSize: 18);
+    final textStyle = theme.textTheme.bodyLarge?.copyWith(fontSize: isLargeText ? 25 : 18,);
 
     if (isBack) {
       return c.backImage != null
@@ -269,6 +271,7 @@ class _LearningScreenState extends State<LearningScreen>
     final backCardColor = isDark ? Colors.grey[700]! : const Color(0xFFC1C1C1);
     final iconColor = theme.iconTheme.color;
     final textStyle = theme.textTheme.bodyLarge;
+    final isLargeText = MyApp.of(context)?.isLargeText ?? false;
 
     if (_isLoading) {
       return Scaffold(
@@ -280,30 +283,42 @@ class _LearningScreenState extends State<LearningScreen>
     if (_cards.isEmpty) {
       return Scaffold(
         backgroundColor: theme.scaffoldBackgroundColor,
-        appBar: AppBar(
-          backgroundColor: theme.appBarTheme.backgroundColor,
-          elevation: 0,
-          centerTitle: true,
-          leading: Padding(
-            padding: const EdgeInsets.only(left: 20),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(32),
-              onTap: () => Navigator.pop(context),
-              child: Icon(Icons.arrow_back, color: iconColor, size: 32),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.emoji_events_rounded, size: isLargeText ? 120 : 100, color: Colors.amber[600]),
+                const SizedBox(height: 32),
+                Text(
+                  'Well done!',
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: isLargeText ? 50 : 35,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'You’ve completed all flashcards in this set.',
+                  style: theme.textTheme.bodyLarge?.copyWith(fontSize: isLargeText ? 26 : 18),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+                ElevatedButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  label: const Text('Go back'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    textStyle: TextStyle(fontSize: isLargeText ? 26 : 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-          title: Text(
-            'Done!',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        body: Center(
-          child: Text(
-            'You have completed all cards in this set.',
-            style: textStyle,
-            textAlign: TextAlign.center,
           ),
         ),
       );
@@ -320,12 +335,15 @@ class _LearningScreenState extends State<LearningScreen>
           child: InkWell(
             borderRadius: BorderRadius.circular(32),
             onTap: () => Navigator.pop(context),
-            child: Icon(Icons.arrow_back, color: iconColor, size: 32),
+            child: Icon(Icons.arrow_back, color: iconColor, size: isLargeText ? 40 : 32),
           ),
         ),
         title: Text(
           '${_currentIndex + 1}/${_cards.length}',
-          style: theme.textTheme.titleMedium,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontSize: isLargeText ? 36 : 24, 
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body: Padding(
@@ -389,9 +407,9 @@ class _LearningScreenState extends State<LearningScreen>
                               Positioned(
                                 bottom: 12,
                                 child: Icon(
-                                  Icons.sync,
-                                  size: 28,
-                                  color: iconColor?.withOpacity(0.6),
+                                 Icons.sync,
+                                    size: 28,
+                                    color: isDark ? Colors.white : Colors.black54,
                                 ),
                               ),
                             ],
@@ -408,12 +426,12 @@ class _LearningScreenState extends State<LearningScreen>
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 IconButton(
-                  iconSize: 48,
+                  iconSize: isLargeText ? 80 : 60,
                   onPressed: _onDidNotKnow,
                   icon: Icon(Icons.close, color: iconColor),
                 ),
                 IconButton(
-                  iconSize: 48,
+                  iconSize: isLargeText ? 80 : 60,
                   onPressed: _onKnewIt,
                   icon: Icon(Icons.check, color: iconColor),
                 ),

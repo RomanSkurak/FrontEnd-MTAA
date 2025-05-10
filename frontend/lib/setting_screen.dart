@@ -45,16 +45,52 @@ class _SettingScreenState extends State<SettingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final myApp = MyApp.of(context);
+    final isLargeText = myApp?.isLargeText ?? false;
     return Scaffold(
-      appBar: AppBar(title: const Text('Nastavenia')),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back,
+          size: isLargeText ? 40 : 30),
+          onPressed: () => Navigator.pop(context, true),
+        ),
+        centerTitle: true,
+        title: Text(
+          'Nastavenia',
+          style: TextStyle(
+            fontSize: isLargeText ? 35 : 25,
+            fontWeight: isLargeText ? FontWeight.bold : FontWeight.w600,
+          ),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             SwitchListTile(
-              title: const Text('Dark Mode'),
+              title: Text(
+                'Dark Mode',
+                style: TextStyle(
+                  fontSize: isLargeText ? 25 : 16,
+                  fontWeight: isLargeText ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
               value: isDarkMode,
               onChanged: _toggleTheme,
+            ),
+            SwitchListTile(
+               title: Text(
+                'Improve readability',
+                style: TextStyle(
+                  fontSize: isLargeText ? 25 : 16,
+                  fontWeight: isLargeText ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+              value: isLargeText,
+              onChanged: (value) {
+                myApp?.setLargeText(value);
+                setState(() {});
+              },
             ),
             const SizedBox(height: 24),
             ElevatedButton(
@@ -62,8 +98,18 @@ class _SettingScreenState extends State<SettingScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color.fromARGB(255, 252, 69, 56),
                 foregroundColor: Colors.black,
+                padding: EdgeInsets.symmetric(
+                  vertical: isLargeText ? 20 : 12,
+                  horizontal: isLargeText ? 40 : 24,
+                ),
               ),
-              child: const Text('Logout'),
+              child: Text(
+                'Logout',
+                style: TextStyle(
+                  fontSize: isLargeText ? 25 : 16,
+                  fontWeight: isLargeText ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
             ),
           ],
         ),

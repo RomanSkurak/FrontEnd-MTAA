@@ -46,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     });
 
-    socket.onDisconnect((_) => print('❌ WebSocket odpojený'));
+    socket.onDisconnect((_) => print('WebSocket odpojeny'));
   }
 
   List<FlashcardSet> recentlyAdded = [];
@@ -122,11 +122,11 @@ class _HomeScreenState extends State<HomeScreen> {
           recentlyAdded = remoteSets.reversed.take(4).toList();
         });
       } catch (e) {
-        print('❌ Chyba pri fetchnutí dát: $e');
+        print('Chyba pri fetchnuti dat: $e');
         _loadFromHive(box);
       }
     } else {
-      print('📴 Offline – Hive fallback');
+      print('Offline – Hive fallback');
       _loadFromHive(box);
     }
 
@@ -152,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   updatedAt: s.updatedAt,
                 ),
               )
-              .take(4) // nemusíš už dávať reversed, lebo už sú zoradené správne
+              .take(4) 
               .toList();
     });
   }
@@ -177,7 +177,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
+    final isLargeText = MyApp.of(context)?.isLargeText ?? false;
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: Padding(
@@ -199,93 +199,132 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text(
                           username,
                           style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
+                            fontWeight: isLargeText ? FontWeight.bold : FontWeight.w600,
+                            fontSize: isLargeText ? 38 : 22,
                           ),
                         ),
                         const Spacer(),
                         IconButton(
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/settings');
+                          onPressed: () async {
+                            final result = await Navigator.pushNamed(context, '/settings');
+                            if (result == true && mounted) {
+                              setState(() {}); 
+                            }
                           },
-                          icon: const Icon(Icons.settings, size: 28),
+                          icon: Icon(Icons.settings, size: isLargeText ? 45 : 38),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 40),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Recently added:',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            decoration: TextDecoration.underline,
+                        Padding(
+                          padding: const EdgeInsets.only(left: 5), 
+                          child: Text(
+                            'Recently added:',
+                            style: TextStyle(
+                              fontSize: isLargeText ? 23 : 16,
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline,
+                            ),
                           ),
                         ),
-                        ElevatedButton.icon(
-                          onPressed: () async {
-                            final online = await ConnectivityService.isOnline();
-                            if (!online) {
-                              if (mounted) {
-                                await showDialog(
-                                  context: context,
-                                  builder:
-                                      (ctx) => AlertDialog(
-                                        title: const Text('Offline'),
-                                        content: const Text(
-                                          'You are offline – creating a set requires internet connection.',
+                        Padding(
+                          padding: const EdgeInsets.only(right: 4),
+                          child: ElevatedButton.icon(
+                            onPressed: () async {
+                              final online = await ConnectivityService.isOnline();
+                              if (!online) {
+                                if (mounted) {
+                                  await showDialog(
+                                    context: context,
+                                    builder: (ctx) {
+                                      final isLargeText = MyApp.of(context)?.isLargeText ?? false;
+                                      return AlertDialog(
+                                        title: Text(
+                                          'Offline',
+                                          style: TextStyle(fontSize: isLargeText ? 32 : 22, fontWeight: FontWeight.bold),
+                                        ),
+                                        content: Text(
+                                          'You are offline – creating a set requires internet connection',
+                                          style: TextStyle(fontSize: isLargeText ? 28 : 18),
                                         ),
                                         actions: [
                                           TextButton(
-                                            onPressed:
-                                                () => Navigator.of(ctx).pop(),
-                                            child: const Text('OK'),
+                                            onPressed: () => Navigator.of(ctx).pop(),
+                                            child: Text(
+                                              'OK',
+                                              style: TextStyle(fontSize: isLargeText ? 30 : 20),
+                                            ),
                                           ),
                                         ],
-                                      ),
-                                );
+                                      );
+                                    },
+                                  );
+                                }
+                                return;
                               }
-                              return;
-                            }
 
-                            final result = await Navigator.pushNamed(
-                              context,
-                              '/create',
-                            );
-                            await Future.delayed(
-                              const Duration(milliseconds: 10),
-                            );
-                            if (!mounted) return;
-                            if (result != null) {
-                              _loadRecentSets();
-                            }
-                          },
-                          icon: const Icon(Icons.add, size: 18),
-                          label: const Text('Add'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.colorScheme.primaryContainer,
-                            foregroundColor:
-                                theme.colorScheme.onPrimaryContainer,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
+                              final result = await Navigator.pushNamed(context, '/create');
+                              await Future.delayed(const Duration(milliseconds: 10));
+                              if (!mounted) return;
+                              if (result != null) {
+                                _loadRecentSets();
+                              }
+                            },
+                            icon: Icon(Icons.add, size: isLargeText ? 27 : 20),
+                            label: Text(
+                              'Add',
+                              style: TextStyle(fontSize: isLargeText ? 23 : 16),
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: theme.colorScheme.primaryContainer,
+                              foregroundColor: theme.colorScheme.onPrimaryContainer,
+                              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              elevation: 0,
                             ),
-                            elevation: 0,
                           ),
                         ),
-                      ],
+                      ], 
                     ),
 
                     const SizedBox(height: 12),
 
                     if (recentlyAdded.isEmpty)
-                      const Text('No sets yet.')
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 40),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox(height: 16),
+                            Text(
+                              'No sets yet',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontSize: isLargeText ? 30 : 20,
+                                fontWeight: FontWeight.w500,
+                                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Tap the Add button to create your first set.',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontSize: isLargeText ? 28 : 16,
+                                color: theme.colorScheme.onSurface.withOpacity(0.5),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
                     else
                       ...recentlyAdded.map((set) {
                         return InkWell(
@@ -297,10 +336,17 @@ class _HomeScreenState extends State<HomeScreen> {
                             );
                           },
                           child: Container(
-                            margin: const EdgeInsets.only(bottom: 8),
+                            margin: const EdgeInsets.only(top: 10, bottom: 20),
                             decoration: BoxDecoration(
                               color: theme.cardColor,
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(12),
+                               boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                               border: Border.all(
                                 color:
                                     theme.brightness == Brightness.dark
@@ -308,30 +354,26 @@ class _HomeScreenState extends State<HomeScreen> {
                                         : Colors.grey.shade300,
                               ),
                             ),
-                            height: 44,
+                            height: isLargeText ? 70 : 54,
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             alignment: Alignment.centerLeft,
                             child: Text(
                               set.name,
-                              style: const TextStyle(fontSize: 16),
+                              style: TextStyle(fontSize: isLargeText ? 30 : 16,
+                              fontWeight: isLargeText ? FontWeight.bold : FontWeight.normal),
                             ),
                           ),
                         );
                       }),
 
                     const Spacer(),
-
+                    
                     Container(
-                      height: 100,
+                      padding: const EdgeInsets.only(bottom: 50),
+                      height: 140,
                       decoration: BoxDecoration(
                         color: theme.cardColor,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color:
-                              theme.brightness == Brightness.dark
-                                  ? Colors.grey.shade700
-                                  : Colors.grey.shade300,
-                        ),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -342,32 +384,33 @@ class _HomeScreenState extends State<HomeScreen> {
                               _loadRecentSets();
                             },
                             child: Container(
-                              width: 100,
-                              height: 70,
+                              width: isLargeText ? 150 : 130,
+                              height: isLargeText ? 120 : 90,
                               decoration: BoxDecoration(
                                 color:
                                     theme.colorScheme.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 FontAwesomeIcons.listUl,
-                                size: 30,
+                                size: isLargeText ? 60 : 40,
                               ),
                             ),
                           ),
+                          const SizedBox(width: 1),
                           GestureDetector(
                             onTap: () => _navigateToStatistics(context),
                             child: Container(
-                              width: 100,
-                              height: 70,
+                              width: isLargeText ? 150 : 130,
+                              height: isLargeText ? 120 : 90,
                               decoration: BoxDecoration(
                                 color:
                                     theme.colorScheme.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 FontAwesomeIcons.chartColumn,
-                                size: 30,
+                                size: isLargeText ? 60 : 40,
                               ),
                             ),
                           ),

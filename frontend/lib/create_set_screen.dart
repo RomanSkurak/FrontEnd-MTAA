@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
+import 'main.dart';
 
 class CreateSetScreen extends StatefulWidget {
   const CreateSetScreen({super.key});
@@ -64,21 +65,33 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
   }
 
   Future<bool> _onWillPop() async {
+    final isLargeText = MyApp.of(context)?.isLargeText ?? false;
+
     final shouldLeave = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Discard changes?'),
-        content: const Text(
+        title: Text(
+          'Discard changes?',
+          style: TextStyle(fontSize: isLargeText ? 24 : 20, fontWeight: FontWeight.bold),
+        ),
+        content: Text(
           'You have unsaved changes. Do you really want to leave?',
+          style: TextStyle(fontSize: isLargeText ? 20 : 16),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('No'),
+            child: Text(
+              'No',
+              style: TextStyle(fontSize: isLargeText ? 20 : 16),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Yes'),
+            child: Text(
+              'Yes',
+              style: TextStyle(fontSize: isLargeText ? 20 : 16),
+            ),
           ),
         ],
       ),
@@ -94,6 +107,7 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final textColor = theme.textTheme.bodyMedium?.color;
+    final isLargeText = MyApp.of(context)?.isLargeText ?? false;
 
     if (_loading) {
       return const Scaffold(
@@ -128,7 +142,8 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
           title: Text(
             'New set',
             style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w500,
+              fontWeight: isLargeText ? FontWeight.bold : FontWeight.w500,
+              fontSize: isLargeText ? 34 : null,
             ),
           ),
         ),
@@ -141,13 +156,30 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
               TextField(
                 controller: _setNameController,
                 maxLength: 16,
+                 style: TextStyle(
+                  fontSize: isLargeText ? 24 : null,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Enter set name',
-                  labelStyle: TextStyle(color: textColor),
+                  labelStyle: TextStyle(color: textColor, fontSize: isLargeText ? 23 : null),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(6),
                   ),
                 ),
+                buildCounter: (
+                  BuildContext context, {
+                  required int currentLength,
+                  required bool isFocused,
+                  required int? maxLength,
+                }) {
+                  return Text(
+                    '$currentLength/$maxLength',
+                    style: TextStyle(
+                      fontSize: isLargeText ? 18 : null,
+                      color: theme.hintColor,
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 20),
               ...cards.asMap().entries.map((entry) {
@@ -170,7 +202,7 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
                       ),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    height: 56,
+                    height: isLargeText ? 66 : 56,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -178,11 +210,11 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
                           child: Text(
                             displayName,
                             overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodyMedium?.copyWith(fontSize: 16),
+                            style: theme.textTheme.bodyMedium?.copyWith(fontSize: isLargeText ? 22 : 16),
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.edit, size: 22),
+                          icon: Icon(Icons.edit, size: isLargeText ? 28 : 22),
                           color: theme.iconTheme.color,
                           onPressed: () async {
                             final flashcardId = card['flashcardId'];
@@ -239,11 +271,11 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.add, size: 26, color: theme.iconTheme.color),
+                      Icon(Icons.add, size: isLargeText ? 36 : 26, color: theme.iconTheme.color),
                       const SizedBox(width: 8),
                       Text(
                         'add card',
-                        style: theme.textTheme.bodyMedium?.copyWith(fontSize: 18),
+                        style: theme.textTheme.bodyMedium?.copyWith(fontSize: isLargeText ? 25 : 18),
                       ),
                     ],
                   ),
@@ -278,10 +310,10 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Create set',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: isLargeText ? 25 : 16,
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),
@@ -290,11 +322,11 @@ class _CreateSetScreenState extends State<CreateSetScreen> {
               ),
               const SizedBox(height: 8),
               if (!_isValidCustomName())
-                const Text(
+                Text(
                   'You must change the set name',
                   style: TextStyle(
                     color: Colors.redAccent,
-                    fontSize: 14,
+                    fontSize: isLargeText ? 19 : 14,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
