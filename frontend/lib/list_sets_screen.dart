@@ -42,7 +42,7 @@ class _ListOfSetsScreenState extends State<ListOfSetsScreen> {
 
     if (online) {
       try {
-        debugPrint('🌐 Online – sťahujem zo servera');
+        debugPrint('Online – stahujem zo servera');
         final remoteSets = await ApiService().fetchSets()
         ..sort((a, b) => b.createdAt.compareTo(a.createdAt)); 
         await box.clear();
@@ -77,11 +77,11 @@ class _ListOfSetsScreenState extends State<ListOfSetsScreen> {
 
         setState(() => _sets = remoteSets);
       } catch (e) {
-        debugPrint('❌  Chyba pri sťahovaní: $e');
+        debugPrint('Chyba pri stahovani: $e');
         _loadFromHive(box);
       }
     } else {
-      debugPrint('📴 Offline – načítavam z Hive');
+      debugPrint('Offline – nacitavam z Hive');
       _loadFromHive(box);
     }
 

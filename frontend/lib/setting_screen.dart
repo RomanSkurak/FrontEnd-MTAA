@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'api_service.dart';
 import 'login_screen.dart';
-import 'main.dart'; // 👈 pridáme import kvôli MyApp.of(context)
+import 'main.dart'; 
 
 class SettingScreen extends StatefulWidget {
   const SettingScreen({super.key});

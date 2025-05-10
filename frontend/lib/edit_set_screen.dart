@@ -281,7 +281,7 @@ class _EditSetScreenState extends State<EditSetScreen> {
                             if (!mounted) return;
 
                             if (result == 'deleted') {
-                              await _loadFlashcards(); // odstránenie už riešiš
+                              await _loadFlashcards(); 
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text('Card was deleted')),
                               );

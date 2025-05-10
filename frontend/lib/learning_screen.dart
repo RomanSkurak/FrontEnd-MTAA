@@ -189,7 +189,7 @@ class _LearningScreenState extends State<LearningScreen>
   }
 
   Future<void> _submitSession() async {
-    if (_isGuest) return; // 🛑 Guest neodosiela nič
+    if (_isGuest) return; // Guest neodosiela nic
     final endTime = DateTime.now();
     try {
       await ApiService().submitLearningSession(
@@ -198,9 +198,9 @@ class _LearningScreenState extends State<LearningScreen>
         correct: _correctCount,
         total: _totalCount,
       );
-      // prípadne zobraz snackBar alebo iná UX odozva
+      // pripadne zobraz snackBar alebo ina UX odozva
     } catch (e) {
-      // log alebo upozorniť používateľa
+      // log alebo upozornit pouzivatela
       debugPrint('Error submitting session: $e');
     }
   }
@@ -213,7 +213,7 @@ class _LearningScreenState extends State<LearningScreen>
         _cards.removeAt(_currentIndex);
         if (_cards.isEmpty) {
           _resetCardSide();
-          _submitSession(); // ── po poslednej karte odošli session
+          _submitSession(); // po poslednej karte odosli session
 
           return;
         }
@@ -229,7 +229,7 @@ class _LearningScreenState extends State<LearningScreen>
       setState(() {
         _currentIndex = (_currentIndex + 1) % _cards.length;
         if (_cards.isEmpty) {
-          _submitSession(); // ── ak by cards prázdne (extra istota)
+          _submitSession(); // ── ak by cards prazdne (extra istota)
           return;
         }
         _resetCardSide();
@@ -270,7 +270,6 @@ class _LearningScreenState extends State<LearningScreen>
     final frontCardColor = isDark ? Colors.grey[850]! : const Color(0xFFE1E1E1);
     final backCardColor = isDark ? Colors.grey[700]! : const Color(0xFFC1C1C1);
     final iconColor = theme.iconTheme.color;
-    final textStyle = theme.textTheme.bodyLarge;
     final isLargeText = MyApp.of(context)?.isLargeText ?? false;
 
     if (_isLoading) {

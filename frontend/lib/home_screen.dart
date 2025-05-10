@@ -29,11 +29,11 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     socket.onConnect((_) {
-      print('✅ Pripojený na WebSocket');
+      print('Pripojeny na WebSocket');
     });
 
     socket.on('newPublicSet', (data) {
-      print('📬 Prišla realtime sada: ${data['title']}');
+      print('📬 Prisla realtime sada: ${data['title']}');
 
       final context = navigatorKey.currentContext;
       if (context != null) {
@@ -137,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final local =
         box.values.toList()..sort(
           (a, b) => b.createdAt.compareTo(a.createdAt),
-        ); // zoradenie zostupne
+        ); 
 
     setState(() {
       recentlyAdded =

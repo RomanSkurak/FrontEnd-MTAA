@@ -167,40 +167,88 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
 
   Future<void> _pickImage() async {
     if (isPickingImage) return;
-
     setState(() => isPickingImage = true);
 
-    final status = await Permission.photos.request(); 
-    final androidStatus = await Permission.storage.request(); 
+    final isLargeText = MyApp.of(context)?.isLargeText ?? false;
 
-    if (!status.isGranted && !androidStatus.isGranted) {
+    final ImageSource? source = await showDialog<ImageSource>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Choose source',
+            style: TextStyle(fontSize: isLargeText ? 26 : 20, fontWeight: FontWeight.bold)),
+        content: Text('Select image source:',
+            style: TextStyle(fontSize: isLargeText ? 22 : 16)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, ImageSource.camera),
+            child: Text('Camera', style: TextStyle(fontSize: isLargeText ? 24 : 16)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, ImageSource.gallery),
+            child: Text('Gallery', style: TextStyle(fontSize: isLargeText ? 24 : 16)),
+          ),
+        ],
+      ),
+    );
+
+    if (source == null) {
       setState(() => isPickingImage = false);
+      return;
+    }
+
+    bool granted = false;
+    if (source == ImageSource.camera) {
+      granted = await Permission.camera.request().isGranted;
+    } else {
+      if (await Permission.photos.request().isGranted) {
+        granted = true;                      
+      } else if (await Permission.mediaLibrary.request().isGranted) {
+        granted = true;                      
+      } else if (await Permission.storage.request().isGranted) {
+        granted = true;                       
+      }
+    }
+
+    if (!granted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Permission to access gallery denied')),
+        SnackBar(
+          content: Text(
+            'Permission denied for ${source == ImageSource.camera ? 'camera' : 'gallery'}',
+            style: TextStyle(fontSize: isLargeText ? 20 : 16),
+          ),
+        ),
       );
+      setState(() => isPickingImage = false);
       return;
     }
 
     try {
-      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      final XFile? image = await _picker.pickImage(source: source);
       if (image != null) {
         final bytes = await image.readAsBytes();
         setState(() {
           if (isFrontSide) {
             frontImage = bytes;
-            frontText = '';
+            frontText  = '';
           } else {
-            backImage = bytes;
-            backText = '';
+            backImage  = bytes;
+            backText   = '';
           }
         });
       }
     } catch (e) {
       debugPrint('Image picking failed: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to pick image',
+              style: TextStyle(fontSize: isLargeText ? 20 : 16)),
+        ),
+      );
     } finally {
       setState(() => isPickingImage = false);
     }
   }
+
 
 
   @override
