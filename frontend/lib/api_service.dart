@@ -47,6 +47,30 @@ class ApiService {
     }
   }
 
+  Future<void> resetStatistics() async {
+    final token = await getToken();
+    final response = await http.post(
+      Uri.parse('$baseUrl/statistics/reset'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+      return json['deletedCount'] ?? 0;
+    } else if (response.statusCode == 401) {
+      throw Exception('Unauthorized – Please log in again.');
+    } else if (response.statusCode == 403) {
+      throw Exception('Forbidden – You don’t have permission.');
+    } else if (response.statusCode == 500) {
+      throw Exception('Server error – Try again later.');
+    } else {
+      throw Exception('Unexpected error: ${response.statusCode}');
+    }
+  }
+
   //ZISKANIE TOKENU
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();

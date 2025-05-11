@@ -11,20 +11,20 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'offline_models.dart';
 
-import 'login_screen.dart';
-import 'register_screen.dart';
-import 'home_screen.dart';
+import 'Controllers/login_screen.dart';
+import 'Controllers/register_screen.dart';
+import 'Controllers/home_screen.dart';
 import 'splash_screen.dart';
-import 'list_sets_screen.dart';
-import 'create_set_screen.dart';
-import 'new_card_screen.dart';
-import 'edit_card_screen.dart' as editCard;
-import 'edit_set_screen.dart' as editSet;
-import 'admin_screen.dart';
-import 'guest_screen.dart';
+import 'Controllers/list_sets_screen.dart';
+import 'Controllers/create_set_screen.dart';
+import 'Controllers/new_card_screen.dart';
+import 'Controllers/edit_card_screen.dart' as editCard;
+import 'Controllers/edit_set_screen.dart' as editSet;
+import 'Controllers/admin_screen.dart';
+import 'Controllers/guest_screen.dart';
 import 'models.dart';
-import 'setting_screen.dart';
-import 'learning_screen.dart';
+import 'Controllers/setting_screen.dart';
+import 'Controllers/learning_screen.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -120,7 +120,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-
   bool _isLargeText = false;
 
   bool get isLargeText => _isLargeText;
@@ -130,6 +129,7 @@ class _MyAppState extends State<MyApp> {
     setState(() => _isLargeText = value);
     prefs.setBool('largeText', value);
   }
+
   ThemeMode _themeMode = ThemeMode.system;
 
   void setTheme(ThemeMode mode) async {
@@ -182,14 +182,13 @@ class _MyAppState extends State<MyApp> {
         '/create': (context) => const CreateSetScreen(),
         '/newcard': (context) => NewCardScreen(),
         '/editset': (context) {
-          final args =
-              ModalRoute.of(context)!.settings.arguments as FlashcardSet;
-          return editSet.EditSetScreen(flashcardSet: args);
+          return const editSet.EditSetScreen(); // bez argumentov
         },
         '/editcard': (context) {
           final flashcardId = ModalRoute.of(context)!.settings.arguments as int;
           return editCard.EditCardScreen(flashcardId: flashcardId);
         },
+
         '/learn': (context) {
           final setId = ModalRoute.of(context)!.settings.arguments as int;
           return LearningScreen(setId: setId);

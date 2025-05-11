@@ -3,8 +3,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 //import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'api_service.dart';
-import 'home_screen.dart';
-import 'login_screen.dart';
+import 'Controllers/home_screen.dart';
+import 'Controllers/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:crypto/crypto.dart';
 
