@@ -37,7 +37,7 @@ class _CreateSetScreenState extends State<CreateSetScreenTablet> {
       if (createdId != null) {
         setState(() {
           _setId = createdId;
-          _setNameController.text = name;
+          _setNameController.text = '';
           _originalName = name;
           _loading = false;
         });
@@ -114,6 +114,8 @@ class _CreateSetScreenState extends State<CreateSetScreenTablet> {
     final theme = Theme.of(context);
     final isLargeText = MyApp.of(context)?.isLargeText ?? false;
     final textColor = theme.textTheme.bodyMedium?.color;
+    final isDark = theme.brightness == Brightness.dark;
+    final cardColor = isDark ? Colors.grey[800] : Colors.grey[200];
 
     if (_loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -268,14 +270,8 @@ class _CreateSetScreenState extends State<CreateSetScreenTablet> {
                                   horizontal: 16,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: theme.cardColor,
+                                  color: cardColor,
                                   borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                    color:
-                                        theme.brightness == Brightness.dark
-                                            ? Colors.grey[700]!
-                                            : Colors.grey[300]!,
-                                  ),
                                 ),
                                 height: isLargeText ? 66 : 56,
                                 child: Row(

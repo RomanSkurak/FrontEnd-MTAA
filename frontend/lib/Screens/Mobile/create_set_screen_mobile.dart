@@ -37,7 +37,7 @@ class _CreateSetScreenState extends State<CreateSetScreenMobile> {
       if (createdId != null) {
         setState(() {
           _setId = createdId;
-          _setNameController.text = name;
+          _setNameController.text = '';
           _originalName = name;
           _loading = false;
         });
@@ -114,6 +114,8 @@ class _CreateSetScreenState extends State<CreateSetScreenMobile> {
     final theme = Theme.of(context);
     final textColor = theme.textTheme.bodyMedium?.color;
     final isLargeText = MyApp.of(context)?.isLargeText ?? false;
+    final isDark = theme.brightness == Brightness.dark;
+    final cardColor = isDark ? Colors.grey[800] : Colors.grey[200];
 
     if (_loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -200,14 +202,8 @@ class _CreateSetScreenState extends State<CreateSetScreenMobile> {
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: theme.cardColor,
+                      color: cardColor,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color:
-                            theme.brightness == Brightness.dark
-                                ? Colors.grey[700]!
-                                : Colors.grey[300]!,
-                      ),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     height: isLargeText ? 66 : 56,

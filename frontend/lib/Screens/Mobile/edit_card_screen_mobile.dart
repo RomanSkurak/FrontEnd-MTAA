@@ -372,9 +372,9 @@ class _EditCardScreenState extends State<EditCardScreenMobile>
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Delete card?'),
+            title: const Text('Remove card?'),
             content: const Text(
-              'Are you sure you want to delete this card? This action cannot be undone.',
+              'Are you sure you want to remove this card? This action cannot be undone.',
             ),
             actions: [
               TextButton(
@@ -383,7 +383,7 @@ class _EditCardScreenState extends State<EditCardScreenMobile>
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Delete'),
+                child: const Text('Remove'),
               ),
             ],
           ),
@@ -632,7 +632,7 @@ class _EditCardScreenState extends State<EditCardScreenMobile>
                     ),
                   ),
                   child: Text(
-                    'Delete card',
+                    'Remove card',
                     style: TextStyle(
                       fontSize: isLargeText ? 20 : 16,
                       color: Colors.white,
