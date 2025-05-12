@@ -302,10 +302,8 @@ class _HomeScreenState extends State<HomeScreenMobile> {
                               style: TextStyle(fontSize: isLargeText ? 23 : 16),
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  theme.colorScheme.primaryContainer,
-                              foregroundColor:
-                                  theme.colorScheme.onPrimaryContainer,
+                              backgroundColor: const Color(0xFF6546C3),
+                              foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 25,
                                 vertical: 12,

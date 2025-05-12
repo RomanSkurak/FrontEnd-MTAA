@@ -279,6 +279,15 @@ class _HomeScreenTabletState extends State<HomeScreenTablet> {
                             'Add',
                             style: TextStyle(fontSize: isLargeText ? 22 : 18),
                           ),
+                           style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF6546C3), 
+                            foregroundColor: Colors.white,            
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+                            elevation: 0,
+                          ),
                         ),
                       ],
                     ),

@@ -127,8 +127,8 @@ class _SettingScreenState extends State<SettingScreenMobile> {
                   horizontal: isLargeText ? 24 : 16,
                   vertical: isLargeText ? 18 : 12,
                 ),
-                backgroundColor: theme.colorScheme.primaryContainer,
-                foregroundColor: theme.colorScheme.onPrimaryContainer,
+                backgroundColor: const Color(0xFF6546C3),
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -142,8 +142,8 @@ class _SettingScreenState extends State<SettingScreenMobile> {
             ElevatedButton(
               onPressed: () => _handleLogout(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 250, 22, 6),
-                foregroundColor: const Color.fromARGB(255, 253, 253, 253),
+                backgroundColor: const Color(0xFFEB0000),
+                foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(
                   vertical: isLargeText ? 20 : 12,
                   horizontal: isLargeText ? 40 : 24,
