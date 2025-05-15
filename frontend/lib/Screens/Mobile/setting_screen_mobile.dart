@@ -3,6 +3,10 @@ import '../../api_service.dart';
 import '../../Controllers/login_screen.dart';
 import '../../main.dart';
 
+/// Obrazovka nastavení pre mobilnú verziu.
+///
+/// Umožňuje prepínať medzi svetlým a tmavým režimom, zlepšiť čitateľnosť textu,
+/// resetovať štatistiky a odhlásiť sa z aplikácie.
 class SettingScreenMobile extends StatefulWidget {
   const SettingScreenMobile({super.key});
 
@@ -10,6 +14,13 @@ class SettingScreenMobile extends StatefulWidget {
   State<SettingScreenMobile> createState() => _SettingScreenState();
 }
 
+/// Stavová trieda pre `SettingScreenMobile`.
+///
+/// Obsahuje logiku pre:
+/// - zmenu témy aplikácie (svetlá/tmavá),
+/// - prepínanie zväčšeného textu pre lepšiu čitateľnosť,
+/// - resetovanie používateľských štatistík (volanie API),
+/// - odhlásenie používateľa z aplikácie.
 class _SettingScreenState extends State<SettingScreenMobile> {
   bool isDarkMode = false;
 
@@ -19,6 +30,7 @@ class _SettingScreenState extends State<SettingScreenMobile> {
     _loadTheme();
   }
 
+  /// Načítava aktuálnu tému z prostredia aplikácie a nastaví `isDarkMode`.
   Future<void> _loadTheme() async {
     final brightness =
         WidgetsBinding.instance.platformDispatcher.platformBrightness;
@@ -27,6 +39,7 @@ class _SettingScreenState extends State<SettingScreenMobile> {
     });
   }
 
+  /// Odhlasuje používateľa a presmeruje ho na prihlasovaciu obrazovku.
   Future<void> _handleLogout(BuildContext context) async {
     await ApiService().logout();
     Navigator.of(context).pushAndRemoveUntil(
@@ -35,6 +48,9 @@ class _SettingScreenState extends State<SettingScreenMobile> {
     );
   }
 
+  /// Prepína svetlý/tmavý režim aplikácie.
+  ///
+  /// Upravuje globálny stav v `MyApp`.
   void _toggleTheme(bool value) {
     final mode = value ? ThemeMode.dark : ThemeMode.light;
     MyApp.of(context)?.setTheme(mode);
@@ -43,6 +59,13 @@ class _SettingScreenState extends State<SettingScreenMobile> {
     });
   }
 
+  /// Vytvára rozhranie nastavení.
+  ///
+  /// Obsahuje:
+  /// - prepínač pre Dark Mode,
+  /// - prepínač pre čitateľnosť (väčší text),
+  /// - tlačidlo na reset štatistík,
+  /// - tlačidlo na odhlásenie.
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

@@ -3,6 +3,11 @@ import '../Screens/Mobile/edit_set_screen_mobile.dart';
 import '../Screens/Tablet/edit_set_screen_tablet.dart';
 import '../../models.dart';
 
+/// Zobrazuje rozhranie s podporou adaptívneho layoutu.
+///
+/// Na základe šírky obrazovky vyberá vhodný widget –
+/// mobilnú verziu pre menšie zariadenia (šírka < 600),
+/// alebo tabletovú verziu pre väčšie obrazovky.
 class EditSetScreen extends StatelessWidget {
   const EditSetScreen({super.key});
 

@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import '../../api_service.dart';
 import '../../main.dart';
 
+/// Obrazovka režimu hosťa (Guest Mode) pre tabletove zariadenia.
+///
+/// Umožňuje hosťovskému používateľovi zobraziť zoznam verejných sád.
+/// Používateľ si môže sady obnoviť, prezerať a vstúpiť do režimu učenia.
+/// Zároveň má prístup k nastaveniam aplikácie.
 class GuestScreenTablet extends StatefulWidget {
   const GuestScreenTablet({super.key});
 
@@ -12,12 +17,16 @@ class GuestScreenTablet extends StatefulWidget {
 class _GuestScreenState extends State<GuestScreenTablet> {
   List<dynamic> publicSets = [];
 
+  /// Inicializuje stav obrazovky a načíta zoznam verejných sád po načítaní widgetu.
   @override
   void initState() {
     super.initState();
     fetchPublicSets();
   }
 
+  /// Načíta zoznam verejných sád flashkariet pomocou `ApiService.getPublicSets`.
+  ///
+  /// V prípade chyby zobrazí upozornenie pomocou `SnackBar`.
   Future<void> fetchPublicSets() async {
     try {
       final sets = await ApiService().getPublicSets();
@@ -31,11 +40,17 @@ class _GuestScreenState extends State<GuestScreenTablet> {
     }
   }
 
+  /// Odhlási používateľa v režime hosťa a presmeruje ho na prihlasovaciu obrazovku.
   Future<void> _logout() async {
     await ApiService().logout();
     Navigator.pushReplacementNamed(context, '/login');
   }
 
+  /// Vytvára a vracia vizuálne rozhranie obrazovky pre režim hosťa.
+  ///
+  /// Obsahuje:
+  /// - Tlačidlo na obnovenie verejných sád
+  /// - Zoznam dostupných verejných sád (alebo hlášku o ich neprítomnosti)
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

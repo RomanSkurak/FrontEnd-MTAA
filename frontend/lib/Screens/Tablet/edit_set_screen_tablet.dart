@@ -3,6 +3,11 @@ import '../../api_service.dart';
 import '../../models.dart';
 import '../../main.dart';
 
+/// Obrazovka pre úpravu existujúcej sady kartičiek v tabletovom rozhraní.
+///
+/// Používateľ môže upraviť názov sady, zobraziť existujúce kartičky,
+/// meniť ich obsah alebo ich vymazať. Môže tiež pridať novú kartičku.
+/// Súčasťou obrazovky je aj možnosť vymazať celú sadu.
 class EditSetScreenTablet extends StatefulWidget {
   final FlashcardSet flashcardSet;
 
@@ -20,6 +25,9 @@ class _EditSetScreenState extends State<EditSetScreenTablet> {
 
   late String _originalName;
 
+  /// Inicializuje stav obrazovky a načíta pôvodné hodnoty:
+  /// - názov sady z `widget.flashcardSet`
+  /// - zoznam kartičiek pomocou [_loadFlashcards].
   @override
   void initState() {
     super.initState();
@@ -34,6 +42,7 @@ class _EditSetScreenState extends State<EditSetScreenTablet> {
     _loadFlashcards();
   }
 
+  /// Načíta všetky kartičky pre daný set z API a uloží ich do `cards`.
   Future<void> _loadFlashcards() async {
     try {
       final result = await ApiService().loadSetWithFlashcards(_setId);
@@ -61,15 +70,19 @@ class _EditSetScreenState extends State<EditSetScreenTablet> {
     }
   }
 
+  /// Overí, či má používateľ zadaný vlastný názov sady.
   bool _isValidCustomName() {
     final trimmed = _setNameController.text.trim();
     return trimmed.isNotEmpty;
   }
 
+  /// Overí, či sa názov sady zmenil oproti pôvodnému.
   bool _hasUnsavedChanges() {
     return _setNameController.text.trim() != _originalName.trim();
   }
 
+  /// Zobrazí potvrdzovací dialóg na zmazanie celej sady.
+  /// Ak používateľ potvrdí, zavolá [ApiService.deleteSet] a vráti sa späť.
   Future<void> _confirmAndDeleteSet() async {
     final isLargeText = MyApp.of(context)?.isLargeText ?? false;
 
@@ -119,6 +132,8 @@ class _EditSetScreenState extends State<EditSetScreenTablet> {
     }
   }
 
+  /// Zobrazí dialóg, keď sa používateľ pokúsi opustiť obrazovku so zmenami.
+  /// Ak nie sú zmeny, vráti `true`. Inak vyžiada potvrdenie.
   Future<bool> _onWillPop() async {
     if (!_hasUnsavedChanges()) return true;
 
@@ -161,6 +176,8 @@ class _EditSetScreenState extends State<EditSetScreenTablet> {
     return (shouldDiscard == true);
   }
 
+  /// Vytvorí a vráti UI obrazovky pre editáciu sady.
+  /// Zobrazuje pole pre názov, zoznam kartičiek a akcie „Update“ a „Delete“.
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

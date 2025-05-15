@@ -5,6 +5,17 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 
+/// Obrazovka prihlasovania pre mobilné zariadenia.
+///
+/// Obsahuje možnosť:
+/// - prihlásiť sa ako registrovaný používateľ (user/admin),
+/// - prihlásiť sa ako hosť (bez registrácie),
+/// - prejsť na registračnú obrazovku.
+///
+/// Využíva:
+/// - `SharedPreferences` na lokálne uloženie mena a hashovaného hesla,
+/// - `FirebaseAnalytics` na logovanie udalostí,
+/// - `ApiService` na komunikáciu s backendom.
 class LoginMobile extends StatefulWidget {
   const LoginMobile({super.key});
 
@@ -12,10 +23,24 @@ class LoginMobile extends StatefulWidget {
   State<LoginMobile> createState() => _LoginMobileState();
 }
 
+/// Stav triedy `LoginMobile`.
+///
+/// Spravuje vstupné polia, spúšťa autentifikáciu a reaguje na výsledok:
+/// - Ukladá údaje lokálne pri úspešnom logine.
+/// - Presmeruje na `/admin`, `/home` alebo `/guest`.
+/// - Zobrazí snackbary pri chybných vstupoch alebo neúspechu.
 class _LoginMobileState extends State<LoginMobile> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
+  /// Spracuje prihlasovanie používateľa.
+  ///
+  /// Ak sú vstupné údaje validné, zavolá `ApiService().login()` a uloží
+  /// údaje do `SharedPreferences`:
+  /// - lokálne používateľské meno,
+  /// - SHA256 hash hesla.
+  ///
+  /// Presmeruje používateľa podľa roly na `/admin` alebo `/home`.
   void handleLogin() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
@@ -57,6 +82,9 @@ class _LoginMobileState extends State<LoginMobile> {
     }
   }
 
+  /// Spracuje prihlásenie hosťa.
+  ///
+  /// Zavolá `ApiService().guestLogin()` a po úspechu presmeruje na `/guest`.
   void handleGuestLogin() async {
     final response = await ApiService().guestLogin();
     if (response) {
@@ -69,6 +97,14 @@ class _LoginMobileState extends State<LoginMobile> {
     }
   }
 
+  /// Vytvára rozhranie prihlasovacej obrazovky.
+  ///
+  /// Obsahuje:
+  /// - logo aplikácie,
+  /// - textové polia pre email a heslo,
+  /// - tlačidlo Login,
+  /// - tlačidlo prechodu na registráciu,
+  /// - možnosť pokračovať ako hosť.
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import '../Screens/Mobile/home_screen_mobile.dart';
 import '../Screens/Tablet/home_screen_tablet.dart';
 
+/// Zobrazuje rozhranie s podporou adaptívneho layoutu.
+///
+/// Na základe šírky obrazovky vyberá vhodný widget –
+/// mobilnú verziu pre menšie zariadenia (šírka < 600),
+/// alebo tabletovú verziu pre väčšie obrazovky.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 

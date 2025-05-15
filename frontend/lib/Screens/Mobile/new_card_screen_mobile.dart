@@ -6,6 +6,12 @@ import '../../api_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../main.dart';
 
+/// Obrazovka pre vytvorenie novej kartičky (flashcard) pre mobilné zariadenia.
+///
+/// Očakáva `setId` ako argument v route, ktorý určuje, do ktorého setu sa
+/// má kartička uložiť.
+///
+/// Táto trieda len inicializuje stavovú obrazovku `NewCardScreenContent`.
 class NewCardScreenMobile extends StatelessWidget {
   const NewCardScreenMobile({super.key});
 
@@ -16,6 +22,17 @@ class NewCardScreenMobile extends StatelessWidget {
   }
 }
 
+/// Stavová obrazovka pre vytváranie novej kartičky.
+///
+/// Umožňuje:
+/// - zadať text pre prednú a zadnú stranu,
+/// - nahrať obrázok pre každú stranu z kamery alebo galérie,
+/// - otáčať kartičku animáciou pomocou `AnimationController`,
+/// - validovať, či sú vyplnené obe strany,
+/// - odoslať kartu na backend pomocou `ApiService().saveCardToSet()`.
+///
+/// V prípade úspešného uloženia sa karta vráti späť do nadriadenej obrazovky
+/// ako `Map<String, dynamic>`.
 class NewCardScreenContent extends StatefulWidget {
   final int setId;
 
@@ -38,6 +55,7 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
 
   final ImagePicker _picker = ImagePicker();
 
+  /// Inicializuje animáciu pre otáčanie kartičky.
   @override
   void initState() {
     super.initState();
@@ -48,17 +66,22 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
     _animation = Tween<double>(begin: 0, end: pi).animate(_controller);
   }
 
+  /// Uvoľní zdroje kontroléra animácie.
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
 
+  /// Zistí, či je karta platná – musí mať obsah aspoň na jednej strane.
+  ///
+  /// Predná aj zadná strana musia obsahovať buď text, alebo obrázok.
   bool _isCardFilled() {
     return (frontText.trim().isNotEmpty || frontImage != null) &&
         (backText.trim().isNotEmpty || backImage != null);
   }
 
+  /// Otočí kartu – zmení pohľad z prednej na zadnú a naopak.
   void _flipCard() {
     if (isFrontSide) {
       _controller.forward();
@@ -68,6 +91,10 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
     setState(() => isFrontSide = !isFrontSide);
   }
 
+  /// Otvorí modálne dialógové okno na úpravu textu kartičky.
+  ///
+  /// Po potvrdení aktualizuje buď `frontText`, alebo `backText`
+  /// a zároveň odstráni prípadný obrázok.
   Future<void> _editText() async {
     final controller = TextEditingController(
       text: isFrontSide ? frontText : backText,
@@ -164,6 +191,10 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
 
   bool isPickingImage = false;
 
+  /// Vyberie obrázok z galérie alebo kamery a priradí ho k správnej strane.
+  ///
+  /// Pred použitím vyžiada potrebné oprávnenia.
+  /// Ak je obrázok vybraný, nahradí aktuálny text danej strany.
   Future<void> _pickImage() async {
     if (isPickingImage) return;
     setState(() => isPickingImage = true);
@@ -264,6 +295,13 @@ class _NewCardScreenContentState extends State<NewCardScreenContent>
     }
   }
 
+  /// Vytvára samotné rozhranie obrazovky.
+  ///
+  /// Obsahuje:
+  /// - animovanú kartu (predná/zadná strana),
+  /// - tlačidlá na zmenu textu alebo obrázku,
+  /// - spodné tlačidlo „Update card“, ktoré uloží kartu,
+  /// - upozornenie pri nevyplnenej karte.
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

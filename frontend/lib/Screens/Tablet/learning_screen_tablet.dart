@@ -10,6 +10,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import '../../main.dart';
 
+/// Model internej kartičky obsahujúcej prednú a zadnú stranu.
+/// Môže obsahovať buď text alebo obrázok pre každú stranu.
 class _Flashcard {
   final String frontText;
   final String backText;
@@ -24,6 +26,14 @@ class _Flashcard {
   });
 }
 
+/// Obrazovka učenia sa kartičiek pre tabletove zariadenia.
+///
+/// Zobrazuje kartičky (text alebo obrázok), umožňuje ich otáčať, označovať správne/nesprávne
+/// a zaznamenáva štatistiky o učení.
+///
+/// Podporuje režim offline cez Hive a režim hosťa (bez ukladania štatistík).
+///
+/// Po úspešnom dokončení sady sa zobrazí gratulačná obrazovka.
 class LearningScreenTablet extends StatefulWidget {
   final int setId;
   const LearningScreenTablet({super.key, required this.setId});
@@ -48,6 +58,7 @@ class _LearningScreenState extends State<LearningScreenTablet>
   bool _isLoading = true;
   late bool _isGuest;
 
+  /// Inicializuje stav komponentu, nastavenie animácie a načítanie kartičiek.
   @override
   void initState() {
     super.initState();
@@ -64,24 +75,30 @@ class _LearningScreenState extends State<LearningScreenTablet>
     _initGuestStatus().then((_) => _loadCards());
   }
 
+  /// Zistí, či má aktuálny používateľ rolu hosťa (guest).
   Future<void> _initGuestStatus() async {
     final prefs = await SharedPreferences.getInstance();
     final role = prefs.getString('role');
     _isGuest = role != 'user' && role != 'admin';
   }
 
+  /// Základné dekódovanie base64 reťazcov na obrázky.
   Uint8List? _decode(String? base64) {
     if (base64 == null || base64.isEmpty) return null;
     final cleaned = base64.replaceAll(RegExp(r'[^A-Za-z0-9+/=]+'), '');
     return base64Decode(cleaned);
   }
 
+  /// Alternatívna kontrola roly hosťa.
+  /// Používané na oddelenie načítavania public vs. private sád.
   Future<bool> isGuestUser() async {
     final prefs = await SharedPreferences.getInstance();
     final role = prefs.getString('role');
     return role != 'user' && role != 'admin';
   }
 
+  /// Načíta kartičky podľa režimu (online/offline + guest).
+  /// V prípade chyby sa zobrazí hláška a návrat späť.
   Future<void> _loadCards() async {
     final isOnline = await ConnectivityService.isOnline();
 
@@ -168,12 +185,14 @@ class _LearningScreenState extends State<LearningScreenTablet>
     }
   }
 
+  /// Vyčistí animáciu pri zrušení komponentu
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
 
+  /// Spustí animáciu pre otočenie kartičky.
   void _flipCard() {
     if (_isFrontSide) {
       _controller.forward();
@@ -183,11 +202,14 @@ class _LearningScreenState extends State<LearningScreenTablet>
     setState(() => _isFrontSide = !_isFrontSide);
   }
 
+  /// Resetuje animáciu a nastaví kartu späť na prednú stranu.
   void _resetCardSide() {
     _isFrontSide = true;
     _controller.reset();
   }
 
+  /// Odosiela údaje o učení na backend.
+  /// Hosťovský režim túto akciu preskočí.
   Future<void> _submitSession() async {
     if (_isGuest) return; // Guest neodosiela nic
     final endTime = DateTime.now();
@@ -205,6 +227,8 @@ class _LearningScreenState extends State<LearningScreenTablet>
     }
   }
 
+  /// Používateľ označil, že vedel správnu odpoveď.
+  /// Odstráni aktuálnu kartu a ak je posledná, odošle štatistiky.
   void _onKnewIt() {
     _correctCount++;
     _totalCount++;
@@ -223,6 +247,8 @@ class _LearningScreenState extends State<LearningScreenTablet>
     });
   }
 
+  /// Používateľ označil, že nevedel odpoveď.
+  /// Posunie sa na ďalšiu kartu.
   void _onDidNotKnow() {
     _totalCount++;
     Future.delayed(const Duration(milliseconds: 300), () {
@@ -237,6 +263,8 @@ class _LearningScreenState extends State<LearningScreenTablet>
     });
   }
 
+  /// Vytvorí widget pre prednú alebo zadnú stranu kartičky.
+  /// Môže obsahovať text alebo obrázok.
   Widget _buildContent(bool isBack) {
     final isLargeText = MyApp.of(context)?.isLargeText ?? false;
     final c = _cards[_currentIndex];
@@ -264,6 +292,8 @@ class _LearningScreenState extends State<LearningScreenTablet>
     }
   }
 
+  /// Vytvára vizuálne rozhranie celej obrazovky učenia.
+  /// Obsahuje animované preklápanie kartičky a ovládacie tlačidlá.
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

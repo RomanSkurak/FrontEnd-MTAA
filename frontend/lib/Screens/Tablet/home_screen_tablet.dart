@@ -12,6 +12,12 @@ import 'dart:typed_data';
 import 'dart:convert';
 import 'package:firebase_analytics/firebase_analytics.dart';
 
+/// Hlavná domovská obrazovka aplikácie pre tabletove zariadenia.
+///
+/// Zobrazuje nedávno pridané sady, umožňuje vytvárať nové sady,
+/// prezerať štatistiky, navigovať do nastavení a zobraziť public sady v reálnom čase.
+///
+/// Komunikuje s backendom pomocou REST API a WebSocketov a podporuje aj offline režim pomocou Hive.
 class HomeScreenTablet extends StatefulWidget {
   const HomeScreenTablet({super.key});
 
@@ -22,6 +28,7 @@ class HomeScreenTablet extends StatefulWidget {
 class _HomeScreenTabletState extends State<HomeScreenTablet> {
   late IO.Socket socket;
 
+  /// Pripája sa k WebSocket serveru a reaguje na udalosti ako `newPublicSet`.s
   void connectSocket() {
     socket = IO.io('https://backend-mtaa.onrender.com', <String, dynamic>{
       'transports': ['websocket'],
@@ -52,6 +59,7 @@ class _HomeScreenTabletState extends State<HomeScreenTablet> {
   String username = 'Loading...';
   bool _loading = true;
 
+  /// Inicializuje socket, používateľské meno a nedávne sady.
   @override
   void initState() {
     super.initState();
@@ -60,6 +68,7 @@ class _HomeScreenTabletState extends State<HomeScreenTablet> {
     _loadRecentSets();
   }
 
+  /// Načíta meno aktuálne prihláseného používateľa.
   Future<void> _loadUsername() async {
     final user = await ApiService().getCurrentUser();
     if (user != null && mounted) {
@@ -75,6 +84,8 @@ class _HomeScreenTabletState extends State<HomeScreenTablet> {
     return base64Decode(cleaned);
   }
 
+  /// Načíta najnovšie sady.
+  /// V prípade offline režimu použije lokálne uložené dáta z Hive.
   Future<void> _loadRecentSets() async {
     setState(() => _loading = true);
     final online = await ConnectivityService.isOnline();
@@ -129,6 +140,7 @@ class _HomeScreenTabletState extends State<HomeScreenTablet> {
     setState(() => _loading = false);
   }
 
+  /// Načíta sady z Hive boxu a prevedie ich na online model `FlashcardSet`.
   void _loadFromHive(Box<OfflineFlashcardSet> box) {
     final local =
         box.values.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -151,6 +163,8 @@ class _HomeScreenTabletState extends State<HomeScreenTablet> {
     });
   }
 
+  /// Naviguje používateľa na obrazovku štatistík.
+  /// Zaznamenáva akciu pomocou Firebase Analytics.
   void _navigateToStatistics(BuildContext context) async {
     try {
       FirebaseAnalytics.instance.logEvent(name: 'statistics_opened');
@@ -166,6 +180,13 @@ class _HomeScreenTabletState extends State<HomeScreenTablet> {
     }
   }
 
+  /// Vytvára vizuálne rozhranie domovskej obrazovky.
+  ///
+  /// Obsahuje:
+  /// - Pozdrav používateľovi
+  /// - Tlačidlo na pridanie novej sady
+  /// - Zoznam nedávno pridaných sád (alebo výzvu na pridanie)
+  /// - Navigáciu do `/sets` a `/statistics`
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -279,13 +300,16 @@ class _HomeScreenTabletState extends State<HomeScreenTablet> {
                             'Add',
                             style: TextStyle(fontSize: isLargeText ? 22 : 18),
                           ),
-                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF6546C3), 
-                            foregroundColor: Colors.white,            
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF6546C3),
+                            foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 25,
+                              vertical: 12,
+                            ),
                             elevation: 0,
                           ),
                         ),

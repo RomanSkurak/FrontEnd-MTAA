@@ -5,6 +5,17 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import '../../api_service.dart';
 
+/// Obrazovka prihlasovania pre tabletove zariadenia.
+///
+/// Obsahuje možnosť:
+/// - prihlásiť sa ako registrovaný používateľ (user/admin),
+/// - prihlásiť sa ako hosť (bez registrácie),
+/// - prejsť na registračnú obrazovku.
+///
+/// Využíva:
+/// - `SharedPreferences` na lokálne uloženie mena a hashovaného hesla,
+/// - `FirebaseAnalytics` na logovanie udalostí,
+/// - `ApiService` na komunikáciu s backendom.
 class LoginTablet extends StatefulWidget {
   const LoginTablet({super.key});
 
@@ -12,10 +23,24 @@ class LoginTablet extends StatefulWidget {
   State<LoginTablet> createState() => _LoginTabletState();
 }
 
+/// Stav triedy `LoginTablet`.
+///
+/// Spravuje vstupné polia, spúšťa autentifikáciu a reaguje na výsledok:
+/// - Ukladá údaje lokálne pri úspešnom logine.
+/// - Presmeruje na `/admin`, `/home` alebo `/guest`.
+/// - Zobrazí snackbary pri chybných vstupoch alebo neúspechu.
 class _LoginTabletState extends State<LoginTablet> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
+  /// Spracuje prihlasovanie používateľa.
+  ///
+  /// Ak sú vstupné údaje validné, zavolá `ApiService().login()` a uloží
+  /// údaje do `SharedPreferences`:
+  /// - lokálne používateľské meno,
+  /// - SHA256 hash hesla.
+  ///
+  /// Presmeruje používateľa podľa roly na `/admin` alebo `/home`.
   void handleLogin() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
@@ -51,6 +76,9 @@ class _LoginTabletState extends State<LoginTablet> {
     }
   }
 
+  /// Spracuje prihlásenie hosťa.
+  ///
+  /// Zavolá `ApiService().guestLogin()` a po úspechu presmeruje na `/guest`.
   void handleGuestLogin() async {
     final success = await ApiService().guestLogin();
     if (success) {
@@ -63,6 +91,14 @@ class _LoginTabletState extends State<LoginTablet> {
     }
   }
 
+  /// Vytvára rozhranie prihlasovacej obrazovky.
+  ///
+  /// Obsahuje:
+  /// - logo aplikácie,
+  /// - textové polia pre email a heslo,
+  /// - tlačidlo Login,
+  /// - tlačidlo prechodu na registráciu,
+  /// - možnosť pokračovať ako hosť.
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

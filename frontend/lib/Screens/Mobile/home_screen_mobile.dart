@@ -12,6 +12,12 @@ import 'dart:typed_data';
 import 'dart:convert';
 import 'package:firebase_analytics/firebase_analytics.dart';
 
+/// Hlavná domovská obrazovka aplikácie pre mobilné zariadenia.
+///
+/// Zobrazuje nedávno pridané sady, umožňuje vytvárať nové sady,
+/// prezerať štatistiky, navigovať do nastavení a zobraziť public sady v reálnom čase.
+///
+/// Komunikuje s backendom pomocou REST API a WebSocketov a podporuje aj offline režim pomocou Hive.
 class HomeScreenMobile extends StatefulWidget {
   const HomeScreenMobile({super.key});
 
@@ -22,6 +28,7 @@ class HomeScreenMobile extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreenMobile> {
   late IO.Socket socket;
 
+  /// Pripája sa k WebSocket serveru a reaguje na udalosti ako `newPublicSet`.
   void connectSocket() {
     socket = IO.io('https://backend-mtaa.onrender.com', <String, dynamic>{
       'transports': ['websocket'],
@@ -52,6 +59,7 @@ class _HomeScreenState extends State<HomeScreenMobile> {
   List<FlashcardSet> recentlyAdded = [];
   String username = 'Loading...';
 
+  /// Inicializuje socket, používateľské meno a nedávne sady.
   @override
   void initState() {
     super.initState();
@@ -62,6 +70,7 @@ class _HomeScreenState extends State<HomeScreenMobile> {
 
   bool _loading = true;
 
+  /// Načíta meno aktuálne prihláseného používateľa.
   Future<void> _loadUsername() async {
     final user = await ApiService().getCurrentUser();
     if (user != null && mounted) {
@@ -77,6 +86,8 @@ class _HomeScreenState extends State<HomeScreenMobile> {
     return base64Decode(cleaned);
   }
 
+  /// Načíta najnovšie sady.
+  /// V prípade offline režimu použije lokálne uložené dáta z Hive.
   Future<void> _loadRecentSets() async {
     setState(() => _loading = true);
 
@@ -133,6 +144,7 @@ class _HomeScreenState extends State<HomeScreenMobile> {
     setState(() => _loading = false);
   }
 
+  /// Načíta sady z Hive boxu a prevedie ich na online model `FlashcardSet`.
   void _loadFromHive(Box<OfflineFlashcardSet> box) {
     final local =
         box.values.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -155,6 +167,8 @@ class _HomeScreenState extends State<HomeScreenMobile> {
     });
   }
 
+  /// Naviguje používateľa na obrazovku štatistík.
+  /// Zaznamenáva akciu pomocou Firebase Analytics.
   void _navigateToStatistics(BuildContext context) async {
     try {
       //final stats = await ApiService().getStatistics();
@@ -172,6 +186,13 @@ class _HomeScreenState extends State<HomeScreenMobile> {
     }
   }
 
+  /// Vytvára vizuálne rozhranie domovskej obrazovky.
+  ///
+  /// Obsahuje:
+  /// - Pozdrav používateľovi
+  /// - Tlačidlo na pridanie novej sady
+  /// - Zoznam nedávno pridaných sád (alebo výzvu na pridanie)
+  /// - Navigáciu do `/sets` a `/statistics`
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

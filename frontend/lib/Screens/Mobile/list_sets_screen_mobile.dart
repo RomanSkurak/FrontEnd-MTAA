@@ -8,6 +8,15 @@ import '../../offline_models.dart';
 import 'dart:typed_data';
 import 'dart:convert';
 
+/// Obrazovka pre zobrazenie všetkých flashcard sád používateľa.
+///
+/// Podporuje online a offline režim.
+/// V offline režime načítava sady z Hive a v online režime synchronizuje z backendu.
+///
+/// Umožňuje používateľovi:
+/// - prezerať si sady,
+/// - upravovať ich (iba online),
+/// - vytvárať nové sady (iba online).
 class ListOfSetsScreenMobile extends StatefulWidget {
   const ListOfSetsScreenMobile({Key? key}) : super(key: key);
 
@@ -15,6 +24,13 @@ class ListOfSetsScreenMobile extends StatefulWidget {
   State<ListOfSetsScreenMobile> createState() => _ListOfSetsScreenState();
 }
 
+/// Stav pre `ListOfSetsScreenMobile`.
+///
+/// Zodpovedá za:
+/// - načítanie sád z online alebo offline zdroja,
+/// - správu loadera,
+/// - dekódovanie obrázkov z base64,
+/// - vytváranie a editovanie sád.
 class _ListOfSetsScreenState extends State<ListOfSetsScreenMobile> {
   /// online / offline dáta
   List<FlashcardSet> _sets = [];
@@ -22,18 +38,23 @@ class _ListOfSetsScreenState extends State<ListOfSetsScreenMobile> {
   /// na zobrazenie loadera
   bool _loading = true;
 
+  /// Pomocná metóda pre dekódovanie base64 reťazca na obrázok.
+  /// Používa sa pri ukladaní obrázkov kartičiek.
   Uint8List? _decodeBase64(String? base64) {
     if (base64 == null || base64.isEmpty) return null;
     final cleaned = base64.replaceAll(RegExp(r'[^A-Za-z0-9+/=]+'), '');
     return base64Decode(cleaned);
   }
 
+  /// Inicializuje stav obrazovky a načíta sady pri štarte.
   @override
   void initState() {
     super.initState();
     _loadSets();
   }
 
+  /// Načíta sady – ak je online, stiahne z backendu a uloží do Hive.
+  /// Ak nie je online, načíta z Hive (offline režim).
   Future<void> _loadSets() async {
     setState(() => _loading = true);
 
@@ -89,6 +110,7 @@ class _ListOfSetsScreenState extends State<ListOfSetsScreenMobile> {
     setState(() => _loading = false);
   }
 
+  /// Načíta sady z Hive databázy a prevedie ich na `FlashcardSet` objekty.
   void _loadFromHive(Box<OfflineFlashcardSet> box) {
     final local =
         box.values.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -107,6 +129,9 @@ class _ListOfSetsScreenState extends State<ListOfSetsScreenMobile> {
             .toList();
   }
 
+  /// Vytvára vizuálne rozhranie obrazovky.
+  /// Zobrazuje zoznam sád a umožňuje navigáciu na ich učenie alebo úpravu.
+  /// Podporuje veľké písmo podľa nastavení aplikácie.
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context);

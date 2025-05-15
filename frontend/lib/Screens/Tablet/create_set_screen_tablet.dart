@@ -2,6 +2,18 @@ import 'package:flutter/material.dart';
 import '../../api_service.dart';
 import '../../main.dart';
 
+/// CreateSetScreenTablet slúži na vytvorenie nového flashcard setu v tabletovej verzii.
+///
+/// Po otvorení obrazovky sa automaticky vytvorí "Untitled set", ktorý sa
+/// používateľovi zobrazuje s možnosťou premenovania.
+///
+/// Používateľ môže:
+/// - pridať nové kartičky,
+/// - upraviť existujúce kartičky,
+/// - premenovať set,
+/// - zrušiť tvorbu a zmazať set (ak opustí obrazovku).
+///
+/// Všetky požiadavky na backend sa vykonávajú prostredníctvom [ApiService].
 class CreateSetScreenTablet extends StatefulWidget {
   const CreateSetScreenTablet({super.key});
 
@@ -9,11 +21,28 @@ class CreateSetScreenTablet extends StatefulWidget {
   State<CreateSetScreenTablet> createState() => _CreateSetScreenState();
 }
 
+/// Stavová trieda pre [CreateSetScreenMobile].
+///
+/// Obsahuje logiku pre:
+/// - vytvorenie počiatočného setu (v [initState]),
+/// - validáciu mena setu,
+/// - aktualizáciu mena setu na backende,
+/// - odstránenie setu pri zrušení operácie,
+/// - zobrazovanie a spracovanie flashcard kariet.
 class _CreateSetScreenState extends State<CreateSetScreenTablet> {
+  /// Kontrolér pre názov setu.
   final TextEditingController _setNameController = TextEditingController();
+
+  /// Zoznam všetkých flashcard kariet pridaných do setu.
   List<Map<String, dynamic>> cards = [];
+
+  /// ID setu v databáze.
   int? _setId;
+
+  /// Indikácia načítavania.
   bool _loading = true;
+
+  /// Pôvodné meno setu (napr. "Untitled set").
   String _originalName = '';
 
   @override
@@ -25,6 +54,7 @@ class _CreateSetScreenState extends State<CreateSetScreenTablet> {
     _createInitialSet();
   }
 
+  /// Vytvorí dočasný set s názvom ako "Untitled set" a uloží jeho ID.
   Future<void> _createInitialSet() async {
     int counter = 1;
     int? createdId;
@@ -53,17 +83,21 @@ class _CreateSetScreenState extends State<CreateSetScreenTablet> {
     Navigator.of(context).pop();
   }
 
+  /// Overuje, či meno setu je platné (musí byť neprázdne a nie "Untitled").
   bool _isValidCustomName() {
     final trimmed = _setNameController.text.trim();
     return trimmed.isNotEmpty && !trimmed.startsWith('Untitled set');
   }
 
+  /// Odstráni set zo servera podľa jeho ID.
   Future<void> _deleteSet() async {
     if (_setId != null) {
       await ApiService().deleteSet(_setId!);
     }
   }
 
+  /// Zobrazí potvrdenie pri pokuse o opustenie obrazovky.
+  /// Ak používateľ potvrdí, zmaže sa aj vytvorený set
   Future<bool> _onWillPop() async {
     final isLargeText = MyApp.of(context)?.isLargeText ?? false;
 
@@ -109,6 +143,7 @@ class _CreateSetScreenState extends State<CreateSetScreenTablet> {
     return shouldLeave;
   }
 
+  /// Buduje používateľské rozhranie pre tvorbu setu v tabletovom režime.
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

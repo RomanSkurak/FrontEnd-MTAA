@@ -2,6 +2,15 @@ import 'package:flutter/material.dart';
 import '../../api_service.dart';
 import '../../models.dart';
 
+/// AdminScreenMobile zobrazuje administrátorské rozhranie pre mobilné zariadenia.
+///
+/// Umožňuje administrátorovi:
+/// - vytvárať nové verejné flashcard sety (public sets),
+/// - zobraziť zoznam všetkých aktuálne dostupných public setov,
+/// - upravovať existujúce sety.
+///
+/// Tento widget využíva `ApiService` na volania backendu.
+/// Zobrazované sety sú reprezentované triedou [FlashcardSet].
 class AdminScreenMobile extends StatefulWidget {
   const AdminScreenMobile({super.key});
 
@@ -9,10 +18,21 @@ class AdminScreenMobile extends StatefulWidget {
   State<AdminScreenMobile> createState() => _AdminScreenState();
 }
 
+/// Stavová trieda pre [AdminScreenMobile].
+///
+/// Obsahuje:
+/// - správu vstupného poľa pre názov setu,
+/// - zoznam načítaných verejných setov,
+/// - metódy na vytváranie a načítanie setov cez API,
+/// - UI pre tvorbu a správu setov.
 class _AdminScreenState extends State<AdminScreenMobile> {
+  /// Textový kontrolér pre názov nového setu.
   final TextEditingController _setNameController = TextEditingController();
+
+  /// Zoznam všetkých verejných setov.
   List<FlashcardSet> publicSets = [];
 
+  /// Vytvorí nový public set cez API a aktualizuje UI.
   Future<void> createPublicSet() async {
     final name = _setNameController.text.trim();
     if (name.isEmpty) {
@@ -42,6 +62,7 @@ class _AdminScreenState extends State<AdminScreenMobile> {
     }
   }
 
+  /// Načíta zoznam public setov z backendu a uloží ich do [publicSets].
   Future<void> fetchPublicSets() async {
     final rawSets = await ApiService().getPublicSets();
     final sets =
@@ -57,6 +78,7 @@ class _AdminScreenState extends State<AdminScreenMobile> {
     fetchPublicSets();
   }
 
+  /// Buduje používateľské rozhranie pre mobilnú verziu admin panelu.
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

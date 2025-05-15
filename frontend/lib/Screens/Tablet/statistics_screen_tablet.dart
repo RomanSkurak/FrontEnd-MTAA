@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import '../../api_service.dart';
 import '../../main.dart';
 
+/// Obrazovka pre zobrazenie štatistík používateľa v tabletovej verzii.
+///
+/// Zobrazuje priemernú úspešnosť učenia, celkový čas strávený učením
+/// (v hodinách), najdlhší a aktuálny učebný "streak".
 class StatisticsScreenTablet extends StatefulWidget {
   const StatisticsScreenTablet({super.key});
 
@@ -10,17 +14,29 @@ class StatisticsScreenTablet extends StatefulWidget {
   State<StatisticsScreenTablet> createState() => _StatisticsScreenState();
 }
 
+/// Stavová trieda pre `StatisticsScreenMobile`.
+///
+/// Obsahuje logiku pre:
+/// - načítanie štatistík z backendu,
+/// - zobrazovanie indikátora načítavania,
+/// - formátovanie a vizualizáciu údajov.
+///
+/// Ak nie je používateľ pripojený, zobrazí chybovú hlášku.
 class _StatisticsScreenState extends State<StatisticsScreenTablet> {
   bool _isLoading = true;
   String? _error;
   Map<String, dynamic>? _stats;
 
+  /// Inicializuje stav obrazovky a spúšťa načítanie štatistík.
   @override
   void initState() {
     super.initState();
     _loadStatistics();
   }
 
+  /// Z backendu načíta štatistiky a aktualizuje stav.
+  ///
+  /// Údaje sa ukladajú do `_stats`, chyba do `_error`.
   Future<void> _loadStatistics() async {
     try {
       final data = await ApiService().getStatistics();
@@ -36,6 +52,12 @@ class _StatisticsScreenState extends State<StatisticsScreenTablet> {
     }
   }
 
+  /// Vytvára hlavnú štruktúru obrazovky.
+  ///
+  /// Zobrazuje:
+  /// - `CircularProgressIndicator` počas načítavania,
+  /// - chybovú hlášku pri výpadku,
+  /// - štatistiky v kontajneri pri úspešnom načítaní.
   @override
   Widget build(BuildContext context) {
     final isLargeText = MyApp.of(context)?.isLargeText ?? false;
@@ -182,6 +204,9 @@ class _StatisticsScreenState extends State<StatisticsScreenTablet> {
     );
   }
 
+  /// Pomocná metóda na vykreslenie jednej riadkovej štatistiky.
+  ///
+  /// Napr. `🎯 Avg Accuracy | 83.5 %`
   Widget _buildStatRow(String label, String value, TextStyle? style) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),

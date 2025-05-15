@@ -8,7 +8,23 @@ import '../../api_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../main.dart';
 
+/// EditCardScreenMobile umožňuje používateľovi upravovať existujúcu kartičku.
+///
+/// Obsahuje možnosť upraviť text alebo nahrať obrázok pre obe strany kartičky.
+/// Používateľ môže medzi stranami preklikávať pomocou animovaného preklápania.
+///
+/// Funkcionality zahŕňajú:
+/// - načítanie pôvodných dát kartičky zo servera cez [ApiService.getFlashcardById],
+/// - detekciu zmien oproti pôvodnému obsahu,
+/// - overenie a potvrdenie opustenia obrazovky pri neuložených zmenách,
+/// - možnosť nahratia obrázka z kamery alebo galérie (s kontrolou oprávnení),
+/// - uloženie zmien na server pomocou [ApiService.updateFlashcard],
+/// - vymazanie kartičky cez [ApiService.deleteFlashcard].
+///
+/// Používa animovaný prechod pre preklápanie karty a prispôsobenie veľkosti textu
+/// podľa nastavení prístupnosti cez [MyApp.isLargeText].
 class EditCardScreenTablet extends StatefulWidget {
+  /// ID kartičky, ktorá sa má upraviť.
   final int flashcardId;
 
   const EditCardScreenTablet({super.key, required this.flashcardId});
@@ -17,6 +33,10 @@ class EditCardScreenTablet extends StatefulWidget {
   State<EditCardScreenTablet> createState() => _EditCardScreenState();
 }
 
+/// Stavová trieda pre [EditCardScreenMobile].
+///
+/// Zabezpečuje logiku správy obsahu kartičky, obrázkov, animácií a interakcií
+/// so serverom a používateľom.
 class _EditCardScreenState extends State<EditCardScreenTablet>
     with SingleTickerProviderStateMixin {
   bool isFrontSide = true;
@@ -47,6 +67,8 @@ class _EditCardScreenState extends State<EditCardScreenTablet>
     _loadFlashcardData();
   }
 
+  /// Načíta dáta kartičky zo servera na základe [widget.flashcardId]
+  /// a nastaví predvolené hodnoty textu a obrázkov pre obe strany.
   Future<void> _loadFlashcardData() async {
     try {
       final data = await ApiService().getFlashcardById(widget.flashcardId);
@@ -85,11 +107,14 @@ class _EditCardScreenState extends State<EditCardScreenTablet>
     super.dispose();
   }
 
+  /// Overí, či je kartička vyplnená — t. j. aspoň jedna z oboch strán má text alebo obrázok.
   bool _isCardFilled() {
     return (frontText.trim().isNotEmpty || frontImage != null) &&
         (backText.trim().isNotEmpty || backImage != null);
   }
 
+  /// Porovná aktuálny stav textov/obrázkov s pôvodnými hodnotami
+  /// a určí, či došlo k nejakej zmene.
   bool _hasUnsavedChanges() {
     if (frontText.trim() != _originalFrontText.trim()) return true;
     if (backText.trim() != _originalBackText.trim()) return true;
@@ -117,6 +142,8 @@ class _EditCardScreenState extends State<EditCardScreenTablet>
     return false;
   }
 
+  /// Zobrazí dialógové okno na potvrdenie opustenia obrazovky
+  /// bez uloženia zmien.
   Future<bool> _confirmDiscardChanges() async {
     final isLargeText = MyApp.of(context)?.isLargeText ?? false;
 
@@ -157,6 +184,8 @@ class _EditCardScreenState extends State<EditCardScreenTablet>
     return (shouldDiscard == true);
   }
 
+  /// Volá [_confirmDiscardChanges], ak existujú zmeny.
+  /// Ak žiadne zmeny nie sú alebo používateľ potvrdí, umožní návrat späť.
   Future<bool> _onWillPop() async {
     if (!_hasUnsavedChanges()) return true;
 
@@ -164,6 +193,7 @@ class _EditCardScreenState extends State<EditCardScreenTablet>
     return discard;
   }
 
+  /// Otočí kartu a spustí animáciu preklopenia z jednej strany na druhú.
   void _flipCard() {
     if (isFrontSide) {
       _controller.forward();
@@ -173,6 +203,8 @@ class _EditCardScreenState extends State<EditCardScreenTablet>
     setState(() => isFrontSide = !isFrontSide);
   }
 
+  /// Zobrazí modálny dialóg na úpravu textu aktuálnej strany kartičky.
+  /// Po potvrdení nahradí text a odstráni prípadný obrázok.
   Future<void> _editText() async {
     final controller = TextEditingController(
       text: isFrontSide ? frontText : backText,
@@ -269,6 +301,9 @@ class _EditCardScreenState extends State<EditCardScreenTablet>
 
   bool isPickingImage = false;
 
+  /// Zobrazí dialóg pre výber zdroja obrázka (kamera alebo galéria),
+  /// získa oprávnenie a nahrá obrázok.
+  /// Po úspešnom výbere nahradí aktuálny obrázok danej strany.
   Future<void> _pickImage() async {
     if (isPickingImage) return;
     setState(() => isPickingImage = true);
@@ -367,6 +402,8 @@ class _EditCardScreenState extends State<EditCardScreenTablet>
     }
   }
 
+  /// Zobrazí potvrdenie na odstránenie kartičky a po potvrdení
+  /// zavolá [ApiService.deleteFlashcard].
   Future<void> _confirmAndDeleteCard() async {
     final shouldDelete = await showDialog<bool>(
       context: context,
