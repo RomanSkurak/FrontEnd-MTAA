@@ -3,6 +3,15 @@ import 'dart:typed_data';
 
 part 'offline_models.g.dart';
 
+/// Model pre offline uložený flashcard set pomocou Hive.
+///
+/// Obsahuje:
+/// - ID setu, názov a verejnosť,
+/// - zoznam kartičiek (`OfflineFlashcard`),
+/// - údaje o vlastníkovi (userId),
+/// - dátum vytvorenia a poslednej úpravy.
+///
+/// Tento model sa používa pri offline režime aplikácie.
 @HiveType(typeId: 0)
 class OfflineFlashcardSet extends HiveObject {
   @HiveField(0)
@@ -37,6 +46,14 @@ class OfflineFlashcardSet extends HiveObject {
   });
 }
 
+/// Model pre jednu offline flashcard uloženú v Hive.
+///
+/// Obsahuje:
+/// - prednú a zadnú stranu ako texty,
+/// - voliteľne obrázky (vo formáte `Uint8List`),
+///   ktoré reprezentujú binárne dáta.
+///
+/// Používa sa spolu s `OfflineFlashcardSet` v offline režime.
 @HiveType(typeId: 1)
 class OfflineFlashcard extends HiveObject {
   @HiveField(0)

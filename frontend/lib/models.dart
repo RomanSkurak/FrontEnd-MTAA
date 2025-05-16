@@ -1,3 +1,13 @@
+/// Modelová trieda pre flashcard set.
+///
+/// Obsahuje informácie o:
+/// - ID setu,
+/// - ID používateľa,
+/// - názve setu,
+/// - verejnosti setu (`isPublic`),
+/// - dátumoch vytvorenia a poslednej aktualizácie.
+///
+/// Používa sa na reprezentáciu flashcard setu v aplikácii.
 class FlashcardSet {
   final int setId;
   final int userId;
@@ -15,6 +25,7 @@ class FlashcardSet {
     required this.updatedAt,
   });
 
+  /// Factory konštruktor na vytvorenie inštancie zo JSON objektu.
   factory FlashcardSet.fromJson(Map<String, dynamic> json) {
     return FlashcardSet(
       setId: json['set_id'],
@@ -27,6 +38,16 @@ class FlashcardSet {
   }
 }
 
+/// Modelová trieda pre jednotlivú flashcard.
+///
+/// Obsahuje:
+/// - ID kartičky,
+/// - ID setu, do ktorého patrí,
+/// - názov kartičky,
+/// - prednú a zadnú stranu (text),
+/// - typ dát (`text`, `picture`).
+///
+/// Táto trieda sa používa pri načítavaní a zobrazovaní kartičiek.
 class Flashcard {
   final int flashcardId;
   final int setId;
@@ -44,6 +65,7 @@ class Flashcard {
     required this.dataType,
   });
 
+  /// Factory konštruktor na vytvorenie flashcard zo JSON objektu.
   factory Flashcard.fromJson(Map<String, dynamic> json) {
     return Flashcard(
       flashcardId: json['flashcard_id'],

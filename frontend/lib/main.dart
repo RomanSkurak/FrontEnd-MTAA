@@ -22,7 +22,6 @@ import 'Controllers/edit_card_screen.dart' as editCard;
 import 'Controllers/edit_set_screen.dart' as editSet;
 import 'Controllers/admin_screen.dart';
 import 'Controllers/guest_screen.dart';
-import 'models.dart';
 import 'Controllers/setting_screen.dart';
 import 'Controllers/learning_screen.dart';
 
@@ -31,6 +30,11 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
+/// Funkcia, ktorá sa spúšťa na pozadí pomocou Workmanager.
+///
+/// - Zobrazí pripomienkovú notifikáciu.
+/// - Uloží čas poslednej úlohy a počet spustení do SharedPreferences.
+/// - Používa sa na pripomenutie učenia cez flashcards.
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((taskName, inputData) async {
@@ -62,6 +66,15 @@ void callbackDispatcher() {
   });
 }
 
+/// Vstupný bod aplikácie.
+///
+/// Inicializuje všetky služby potrebné pre fungovanie aplikácie:
+/// - Firebase (Messaging, Analytics, Crashlytics),
+/// - Hive (lokálne úložisko),
+/// - Workmanager (pozadie),
+/// - FlutterLocalNotifications (notifikácie).
+///
+/// Na konci spúšťa aplikáciu `MyApp`.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -80,9 +93,7 @@ void main() async {
   });
 
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-    print(
-      '📬 Užívateľ klikol na notifikáciu (background): ${message.notification?.title}',
-    );
+    print('📬 Užívateľ klikol na notifikáciu (background): ${message.notification?.title}');
   });
 
   await flutterLocalNotificationsPlugin.initialize(
@@ -93,7 +104,6 @@ void main() async {
 
   await Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
 
-  //await Workmanager().cancelAll(); // zruší všetky tasky
   await Workmanager().registerPeriodicTask(
     "studyReminderTask",
     "reminderTask",
@@ -102,16 +112,21 @@ void main() async {
   );
 
   await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
-
-  // Zaznamenaj všetky Flutter chyby
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
 
   runApp(const MyApp());
 }
 
+/// Hlavný widget aplikácie.
+///
+/// Obsahuje:
+/// - navigačný kľúč pre prácu s routami mimo `BuildContext`,
+/// - podporu pre svetlú/tmavú tému a veľké písmo,
+/// - definíciu všetkých named rout pre aplikáciu.
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
+  /// Poskytuje prístup k stavu aplikácie z potomkov widgetového stromu.
   static _MyAppState? of(BuildContext context) =>
       context.findAncestorStateOfType<_MyAppState>();
 
@@ -119,11 +134,18 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
+/// Stavová trieda pre `MyApp`.
+///
+/// Umožňuje:
+/// - prepínať medzi témami (light/dark/system),
+/// - aktivovať väčšie písmo,
+/// - načítať uložené preferencie pri štarte.
 class _MyAppState extends State<MyApp> {
   bool _isLargeText = false;
 
   bool get isLargeText => _isLargeText;
 
+  /// Zapne alebo vypne veľké písmo a uloží nastavenie.
   void setLargeText(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     setState(() => _isLargeText = value);
@@ -132,16 +154,17 @@ class _MyAppState extends State<MyApp> {
 
   ThemeMode _themeMode = ThemeMode.system;
 
+  /// Nastaví tému aplikácie a uloží ju do preferencií.
   void setTheme(ThemeMode mode) async {
     final prefs = await SharedPreferences.getInstance();
     setState(() => _themeMode = mode);
     prefs.setString('themeMode', mode.name);
   }
 
+  /// Načíta používateľské preferencie (téma a veľkosť písma).
   Future<void> loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
     final savedTheme = prefs.getString('themeMode');
-
     _isLargeText = prefs.getBool('largeText') ?? false;
 
     setState(() {
@@ -161,6 +184,7 @@ class _MyAppState extends State<MyApp> {
     loadTheme();
   }
 
+  /// Buduje štruktúru MaterialApp a definuje všetky cesty (routy).
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -181,14 +205,11 @@ class _MyAppState extends State<MyApp> {
         '/settings': (context) => const SettingScreen(),
         '/create': (context) => const CreateSetScreen(),
         '/newcard': (context) => NewCardScreen(),
-        '/editset': (context) {
-          return const editSet.EditSetScreen(); // bez argumentov
-        },
+        '/editset': (context) => const editSet.EditSetScreen(),
         '/editcard': (context) {
           final flashcardId = ModalRoute.of(context)!.settings.arguments as int;
           return editCard.EditCardScreen(flashcardId: flashcardId);
         },
-
         '/learn': (context) {
           final setId = ModalRoute.of(context)!.settings.arguments as int;
           return LearningScreen(setId: setId);

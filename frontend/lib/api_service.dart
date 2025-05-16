@@ -6,12 +6,21 @@ import 'package:http_parser/http_parser.dart';
 import 'dart:typed_data';
 import 'package:mime/mime.dart';
 
+/// Služba `ApiService` zabezpečuje komunikáciu s backend API.
+///
+/// Obsahuje metódy na:
+/// - registráciu a prihlásenie,
+/// - správu JWT tokenov,
+/// - CRUD operácie nad flashcard setmi a kartami,
+/// - public sety a login pre hostí,
+/// - štatistiky učenia,
+/// - offline fallback pre používateľa,
+/// - spracovanie binárnych obrázkov,
+/// - notifikácie a FCM tokeny.
 class ApiService {
-  final String baseUrl =
-      'https://backend-mtaa.onrender.com'; // Android emulator -> localhost, http://192.168.0.98:3000
-  //http://10.0.2.2:3000 , https://backend-mtaa.onrender.com
+  final String baseUrl = 'https://backend-mtaa.onrender.com'; 
 
-  //REGISTER
+  /// Registrovanie nového používateľa.
   Future<bool> register(String name, String email, String password) async {
     final response = await http.post(
       Uri.parse('$baseUrl/register'),
@@ -22,7 +31,7 @@ class ApiService {
     return response.statusCode == 201;
   }
 
-  //LOGIN
+  /// Prihlásenie používateľa (získanie tokenu + role).
   Future<bool> login(String email, String password) async {
     final response = await http
         .post(
@@ -47,6 +56,7 @@ class ApiService {
     }
   }
 
+  /// Resetuje všetky štatistiky používateľa.
   Future<void> resetStatistics() async {
     final token = await getToken();
     final response = await http.post(
@@ -71,13 +81,13 @@ class ApiService {
     }
   }
 
-  //ZISKANIE TOKENU
+   /// Získanie JWT tokenu z local storage.
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('token');
   }
 
-  //GETFLASHCARDS
+  /// Získanie všetkých flashcards.
   Future<http.Response> getFlashcards() async {
     final token = await getToken();
     final response = await http.get(
@@ -87,7 +97,7 @@ class ApiService {
     return response;
   }
 
-  //VERIFYTOKEN
+  /// Overenie platnosti JWT tokenu.
   Future<bool> verifyToken(String token) async {
     try {
       final response = await http.get(
@@ -102,7 +112,7 @@ class ApiService {
     }
   }
 
-  //ODHLASENIE
+  /// Odhlásenie používateľa – vymaže všetky uložené údaje.
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
@@ -114,7 +124,7 @@ class ApiService {
     await prefs.remove('local_name');
   }
 
-  //ZISKANIE SETOV
+  /// Získanie všetkých flashcard setov používateľa.
   Future<List<FlashcardSet>> fetchSets() async {
     final token = await getToken();
 
@@ -131,7 +141,7 @@ class ApiService {
     }
   }
 
-  //VYTVORENIE SETU
+  /// Vytvorenie nového setu typu public.
   Future<int?> createSet({required String name, required bool isPublic}) async {
     final token = await getToken();
     final response = await http.post(
@@ -151,7 +161,7 @@ class ApiService {
     }
   }
 
-  // GET public sets
+  /// Načíta všetky sety typu public.
   Future<List<dynamic>> getPublicSets() async {
     final token = await getToken();
     final response = await http.get(
@@ -166,7 +176,7 @@ class ApiService {
     }
   }
 
-  //get public flashcards
+  /// Získa všetky flashcards pre daný set typu public.
   Future<List<dynamic>> getPublicFlashcardsBySet(int setId) async {
     final uri = Uri.parse('$baseUrl/public-flashcards/$setId');
     final res = await http.get(uri);
@@ -178,7 +188,7 @@ class ApiService {
     }
   }
 
-  // POST public set
+  /// Vytvorenie verejného setu.
   Future<bool> createPublicSet(String name) async {
     final token = await getToken();
     final response = await http.post(
@@ -192,7 +202,7 @@ class ApiService {
     return response.statusCode == 201;
   }
 
-  //GUEST login
+  /// Prihlásenie ako hosť (guest login).
   Future<bool> guestLogin() async {
     final response = await http.post(Uri.parse('$baseUrl/guest-login'));
 
@@ -209,7 +219,7 @@ class ApiService {
     return false;
   }
 
-  //VYTVORENIE KARTY
+  /// Vytvorenie novej flashkarty.
   Future<bool> addFlashcard({
     required int setId,
     required String name,
@@ -267,7 +277,7 @@ class ApiService {
     return streamed.statusCode == 201;
   }
 
-  //UPDATE NAZVU SETU
+  /// Aktualizácia názvu setu.
   Future<void> updateSetName(int setId, String newName) async {
     final token = await getToken();
 
@@ -281,7 +291,7 @@ class ApiService {
     );
   }
 
-  //DELETE SET
+  /// Načíta konkrétny set aj s jeho flashcards.
   Future<bool> deleteSet(int setId) async {
     final token = await getToken();
 
@@ -293,7 +303,7 @@ class ApiService {
     return response.statusCode == 200;
   }
 
-  // ULOZENIE KARTY S NAZVOM
+  /// Uloženie flashkarty do setu s generovaným názvom.
   Future<int?> saveCardToSet({
     required int setId,
     required String frontText,
@@ -372,7 +382,7 @@ class ApiService {
     }
   }
 
-  // LOAD konkretneho setu aj s flashcards
+  /// Načíta konkrétny set aj s jeho flashcards.
   Future<Map<String, dynamic>> loadSetWithFlashcards(int setId) async {
     final token = await getToken();
 
@@ -396,7 +406,7 @@ class ApiService {
     }
   }
 
-  //Flashcard by ID
+  /// Získanie jednej flashkarty podľa ID.
   Future<Map<String, dynamic>> getFlashcardById(int flashcardId) async {
     final token = await getToken();
 
@@ -412,7 +422,7 @@ class ApiService {
     }
   }
 
-  //Update flashcard
+  /// Úprava existujúcej flashkarty
   Future<bool> updateFlashcard({
     required int flashcardId,
     required String frontText,
@@ -479,7 +489,7 @@ class ApiService {
     return response.statusCode == 200;
   }
 
-  // DELETE FLASHCARD
+  /// Vymazanie jednej flashkarty.
   Future<bool> deleteFlashcard(int flashcardId) async {
     final token = await getToken();
 
@@ -491,7 +501,9 @@ class ApiService {
     return response.statusCode == 200;
   }
 
-  // GET CURRENT USER INFO
+  /// Získa informácie o aktuálnom používateľovi.
+  ///
+  /// Pri offline režime použije lokálne uložené meno.
   Future<Map<String, dynamic>?> getCurrentUser() async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -506,7 +518,6 @@ class ApiService {
       if (response.statusCode == 200) {
         final user = jsonDecode(response.body);
 
-        // ✅ Ulož "name" pre offline režim (lebo backend vracia "name")
         if (user['name'] != null) {
           await prefs.setString('local_name', user['name']);
         }
@@ -521,7 +532,6 @@ class ApiService {
       print('📴 Offline or request failed: $e');
     }
 
-    // ✅ Offline fallback s rovnakým kľúčom "name"
     final localName = prefs.getString('local_name');
     if (localName != null) {
       return {'name': localName};
@@ -530,7 +540,7 @@ class ApiService {
     return null;
   }
 
-  //Odoslanie FCM tokenu
+  /// Odošle FCM token na backend.
   Future<void> sendTokenToBackend(String fcmToken, String jwtToken) async {
     final token = await getToken();
     final response = await http.post(
@@ -575,7 +585,6 @@ class ApiService {
 
     if (res.statusCode == 201) {
       final decoded = jsonDecode(res.body) as Map<String, dynamic>;
-      // podľa nášho BE vraciame { session: {...}, statistics: {...} }
       return decoded['statistics'] as Map<String, dynamic>;
     } else {
       throw Exception('Chyba pri odosielaní session: ${res.statusCode}');
@@ -603,7 +612,6 @@ class ApiService {
       }
     } catch (e) {
       print('📴 Offline alebo chyba siete pri načítaní štatistík: $e');
-      // 💥 Toto zabráni otvoreniu StatisticsScreen:
       throw Exception('Offline režim – štatistiky nie sú dostupné');
     }
   }
